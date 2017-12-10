@@ -3,11 +3,8 @@
 #include <string>
 #include <vector>
 
-// Convert the first line of the input stream to a list of digits.
-std::vector<int> read_digits(std::istream& input) {
-    std::string line;
-    std::getline(input, line);
-
+// Convert the line to a list of digits.
+std::vector<int> read_digits(const std::string& line) {
     std::vector<int> digits(line.size());
     std::transform(
         std::cbegin(line), std::cend(line), std::begin(digits),
@@ -37,5 +34,8 @@ int reverse_captcha(const std::vector<int>& digits) {
 }
 
 int main() {
-    std::cout << reverse_captcha(read_digits(std::cin)) << '\n';
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        std::cout << reverse_captcha(read_digits(line)) << '\n';
+    }
 }
