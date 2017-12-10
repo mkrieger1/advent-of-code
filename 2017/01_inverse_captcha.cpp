@@ -26,7 +26,7 @@ int reverse_captcha(const std::vector<int>& digits) {
     for (
         auto first = std::begin(digits), second = std::cbegin(copy);
         first != std::end(digits);
-        first++, second++
+        ++first, ++second
     ) {
         if (*first == *second) sum += *first;
     }
