@@ -20,11 +20,11 @@ std::vector<int> read_digits(std::istream& input) {
 // (the first digit is the "next" digit of the last digit).
 int reverse_captcha(const std::vector<int>& digits) {
     int sum = 0;
-    for (auto p = std::begin(digits); p != std::end(digits); p++) {
-        auto next_p =
-            (std::next(p) == std::end(digits)) ?
-            std::begin(digits) : std::next(p);
-        if (*p == *next_p) sum += *p;
+    for (auto first = std::begin(digits); first != std::end(digits); first++) {
+        auto second =
+            (std::next(first) == std::end(digits)) ?
+            std::begin(digits) : std::next(first);
+        if (*first == *second) sum += *first;
     }
     return sum;
 }
