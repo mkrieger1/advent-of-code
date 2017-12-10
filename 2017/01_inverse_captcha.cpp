@@ -16,12 +16,14 @@ std::vector<int> read_digits(std::istream& input) {
     return digits;
 }
 
-// Return the sum of all digits in the list that match the next digit
-// (the first digit is the "next" digit of the last digit).
+// Return the sum of all digits that are equal to the digit halfway around the
+// circular list (assuming that the number of digits is even).
 int reverse_captcha(const std::vector<int>& digits) {
     std::vector<int> copy{digits};
-    std::rotate(std::begin(copy), std::begin(copy) + 1, std::end(copy));
-      // abcd -> bcda
+    std::rotate(
+        std::begin(copy), std::begin(copy) + digits.size() / 2,
+        std::end(copy)
+    ); // abcd -> cdab
 
     int sum = 0;
     for (
