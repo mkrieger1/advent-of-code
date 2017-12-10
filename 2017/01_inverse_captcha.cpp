@@ -19,11 +19,16 @@ std::vector<int> read_digits(std::istream& input) {
 // Return the sum of all digits in the list that match the next digit
 // (the first digit is the "next" digit of the last digit).
 int reverse_captcha(const std::vector<int>& digits) {
+    std::vector<int> copy{digits};
+    std::rotate(std::begin(copy), std::begin(copy) + 1, std::end(copy));
+      // abcd -> bcda
+
     int sum = 0;
-    for (auto first = std::begin(digits); first != std::end(digits); first++) {
-        auto second =
-            (std::next(first) == std::end(digits)) ?
-            std::begin(digits) : std::next(first);
+    for (
+        auto first = std::begin(digits), second = std::cbegin(copy);
+        first != std::end(digits);
+        first++, second++
+    ) {
         if (*first == *second) sum += *first;
     }
     return sum;
