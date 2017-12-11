@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <iterator>
 #include <sstream>
@@ -17,6 +18,14 @@ public:
             std::back_inserter(numbers)
         );
     }
+
+    // Return the difference between the smallest and the largest number.
+    int max_difference() {
+        if (numbers.empty()) { return 0; }
+        auto max{std::max_element(std::begin(numbers), std::end(numbers))};
+        auto min{std::min_element(std::begin(numbers), std::end(numbers))};
+        return *max - *min;
+    }
 };
 
 
@@ -32,10 +41,20 @@ class Spreadsheet {
     }
 
 public:
+    // Return the sum of the maximum difference between any two numbers in
+    // each row.
+    int sum_rows_max_difference() {
+        int result{0};
+        for (auto row : rows) {
+            result += row.max_difference();
+        }
+        return result;
+    }
 };
 
 
 int main() {
     Spreadsheet sheet;
     std::cin >> sheet;
+    std::cout << sheet.sum_rows_max_difference() << '\n';
 }
