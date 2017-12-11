@@ -21,7 +21,7 @@ public:
     }
 
     // Return the difference between the smallest and the largest number.
-    int max_difference() {
+    int max_difference() const {
         if (numbers.empty()) { return 0; }
         auto max{std::max_element(std::begin(numbers), std::end(numbers))};
         auto min{std::min_element(std::begin(numbers), std::end(numbers))};
@@ -31,7 +31,7 @@ public:
     // Return the ratio between the only two evenly divisible numbers.
     // Assumes that there exists only one such pair of numbers.
     // Assumes that the row doesn't contain the same number more than once.
-    int evenly_divisible_ratio() {
+    int evenly_divisible_ratio() const {
         if (numbers.empty()) { return 0; }
 
         std::set<int> nums{std::begin(numbers), std::end(numbers)};
@@ -39,7 +39,7 @@ public:
         // guard against no pair of evenly divisible numbers exists
         auto max{std::max_element(std::begin(nums), std::end(nums))};
 
-        for (auto x : nums) {
+        for (const auto &x : nums) {
             for (int i = 2; i * x <= *max; ++i) {
                 if (nums.find(i * x) != std::end(nums)) {
                     return i;
@@ -67,7 +67,7 @@ public:
     // each row.
     int sum_rows_max_difference() {
         int result{0};
-        for (auto row : rows) {
+        for (const auto &row : rows) {
             result += row.max_difference();
         }
         return result;
@@ -77,7 +77,7 @@ public:
     // each row.
     int sum_rows_evenly_divisible_ratio() {
         int result{0};
-        for (auto row : rows) {
+        for (const auto &row : rows) {
             result += row.evenly_divisible_ratio();
         }
         return result;
