@@ -1,5 +1,7 @@
+#include <cassert>
 #include <cmath>
 #include <iostream>
+#include <vector>
 
 // Location:
 // 17 16 15 14 13
@@ -57,7 +59,28 @@ int distance(int location) {
     return radius(location) + angle(location);
 }
 
+struct TestCase {
+    int location;
+    int distance;
+};
+
 int main() {
+    std::vector<TestCase> tests{
+        {1, 0},
+        {9, 2},
+        {10, 3},
+        {11, 2},
+        {12, 3},
+        {13, 4},
+        {14, 3},
+        {23, 2},
+        {1024, 31}
+    };
+
+    for (auto const& test : tests) {
+        assert(distance(test.location) == test.distance);
+    }
+
     int location;
     std::cin >> location;
     std::cout << distance(location) << '\n';
