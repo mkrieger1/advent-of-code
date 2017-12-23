@@ -2,7 +2,6 @@
 #include <iostream>
 #include <iterator>
 #include <sstream>
-#include <set>
 #include <vector>
 
 // A row in the spreadsheet consists of a list of numbers.
@@ -32,18 +31,14 @@ public:
     // Assumes that there exists only one such pair of numbers.
     // Assumes that the row doesn't contain the same number more than once.
     int evenly_divisible_ratio() const {
-        if (numbers.empty()) { return 0; }
+        for (auto p = std::begin(numbers); p != std::end(numbers); ++p) {
+            for (auto q = p + 1; q != std::end(numbers); ++q) {
+                int small, large;
 
-        std::set<int> nums{std::begin(numbers), std::end(numbers)};
+                if (*p < *q) { small = *p; large = *q; }
+                else         { small = *q; large = *p; }
 
-        // guard against no pair of evenly divisible numbers exists
-        auto max{std::max_element(std::begin(nums), std::end(nums))};
-
-        for (const auto &x : nums) {
-            for (int i = 2; i * x <= *max; ++i) {
-                if (nums.find(i * x) != std::end(nums)) {
-                    return i;
-                }
+                if (large % small == 0) { return large / small; }
             }
         }
         return 0;
