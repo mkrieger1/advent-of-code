@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cstddef>
 #include <cmath>
 #include <iostream>
 #include <vector>
@@ -28,7 +29,7 @@
 
 // Return the number of locations within the radius.
 // 0 -> 1,  1 -> 9,  2 -> 25,  ...
-int num_locations(int radius) {
+std::size_t num_locations(int radius) {
     return std::pow(2 * radius + 1, 2);
 }
 
@@ -48,9 +49,10 @@ int radius(int location) {
 int angle(int location) {
     int r{radius(location)};
     if (r == 0) { return 0; }
-    int num{num_locations(r - 1)};
-    int rest{location - num};
-    return std::abs(rest % (2 * r) - r);
+    std::size_t num{num_locations(r - 1)};
+    std::size_t rest{location - num};
+    int a(rest % (2 * r) - r);
+    return std::abs(a);
 }
 
 // Return the Manhattan distance from the memory location to the access port
