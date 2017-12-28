@@ -27,21 +27,23 @@
 
 // Distance = Radius + Angle
 
+struct Radius { std::size_t value; };
+
 // Return the number of locations within the radius.
 // 0 -> 1,  1 -> 9,  2 -> 25,  ...
-std::size_t num_locations(int radius)
+std::size_t num_locations(Radius r)
 {
-    return std::pow(2 * radius + 1, 2);
+    return std::pow(2 * r.value + 1, 2);
 }
 
 // Return the radius of the location in the spiral memory.
-int radius(int location)
+Radius radius(int location)
 {
-    int radius{0};
-    while (num_locations(radius) < location) {
-        ++radius;
+    Radius r{0};
+    while (num_locations(r) < location) {
+        ++r.value;
     }
-    return radius;
+    return {r.value};
 }
 
 // Return the angle of the location in the spiral memory.
@@ -50,11 +52,11 @@ int radius(int location)
 // with radius R, so its angle is R.
 int angle(int location)
 {
-    int r{radius(location)};
-    if (r == 0) { return 0; }
-    std::size_t num{num_locations(r - 1)};
+    Radius r{radius(location)};
+    if (r.value == 0) { return 0; }
+    std::size_t num{num_locations({r.value - 1})};
     std::size_t rest{location - num};
-    int a(rest % (2 * r) - r);
+    int a(rest % (2 * r.value) - r.value);
     return std::abs(a);
 }
 
@@ -62,7 +64,7 @@ int angle(int location)
 // (at location 1).
 int distance(int location)
 {
-    return radius(location) + angle(location);
+    return radius(location).value + angle(location);
 }
 
 struct TestCase {
