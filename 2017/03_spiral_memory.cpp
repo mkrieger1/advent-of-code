@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 
-// Location:
+// Address:
 // 17 16 15 14 13
 // 18  5  4  3 12
 // 19  6  1  2 11
@@ -28,6 +28,7 @@
 // Distance = Radius + Angle
 
 struct Radius { std::size_t value; };
+struct Address { std::size_t value; };
 
 // Return the number of locations within the radius.
 // 0 -> 1,  1 -> 9,  2 -> 25,  ...
@@ -37,10 +38,10 @@ std::size_t num_locations(Radius r)
 }
 
 // Return the radius of the location in the spiral memory.
-Radius radius(int location)
+Radius radius(Address a)
 {
     Radius r{0};
-    while (num_locations(r) < location) {
+    while (num_locations(r) < a.value) {
         ++r.value;
     }
     return {r.value};
@@ -50,25 +51,25 @@ Radius radius(int location)
 // For a location with radius R, its angle is between 0 and R.
 // The first location (*) with radius R+1 is to the right of the last location
 // with radius R, so its angle is R.
-int angle(int location)
+int angle(Address a)
 {
-    Radius r{radius(location)};
+    Radius r{radius(a)};
     if (r.value == 0) { return 0; }
     std::size_t num{num_locations({r.value - 1})};
-    std::size_t rest{location - num};
-    int a(rest % (2 * r.value) - r.value);
-    return std::abs(a);
+    std::size_t rest{a.value - num};
+    int signed_angle(rest % (2 * r.value) - r.value);
+    return std::abs(signed_angle);
 }
 
 // Return the Manhattan distance from the memory location to the access port
 // (at location 1).
-int distance(int location)
+int distance(Address a)
 {
-    return radius(location).value + angle(location);
+    return radius(a).value + angle(a);
 }
 
 struct TestCase {
-    int location;
+    std::size_t address;
     int distance;
 };
 
@@ -87,10 +88,10 @@ int main()
     };
 
     for (auto const& test : tests) {
-        assert(distance(test.location) == test.distance);
+        assert(distance(Address{test.address}) == test.distance);
     }
 
-    int location;
-    std::cin >> location;
-    std::cout << distance(location) << '\n';
+    std::size_t a;
+    std::cin >> a;
+    std::cout << distance(Address{a}) << '\n';
 }
