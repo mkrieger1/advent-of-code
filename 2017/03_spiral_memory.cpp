@@ -29,12 +29,14 @@
 
 // Return the number of locations within the radius.
 // 0 -> 1,  1 -> 9,  2 -> 25,  ...
-std::size_t num_locations(int radius) {
+std::size_t num_locations(int radius)
+{
     return std::pow(2 * radius + 1, 2);
 }
 
 // Return the radius of the location in the spiral memory.
-int radius(int location) {
+int radius(int location)
+{
     int radius{0};
     while (num_locations(radius) < location) {
         ++radius;
@@ -46,7 +48,8 @@ int radius(int location) {
 // For a location with radius R, its angle is between 0 and R.
 // The first location (*) with radius R+1 is to the right of the last location
 // with radius R, so its angle is R.
-int angle(int location) {
+int angle(int location)
+{
     int r{radius(location)};
     if (r == 0) { return 0; }
     std::size_t num{num_locations(r - 1)};
@@ -57,7 +60,8 @@ int angle(int location) {
 
 // Return the Manhattan distance from the memory location to the access port
 // (at location 1).
-int distance(int location) {
+int distance(int location)
+{
     return radius(location) + angle(location);
 }
 
@@ -66,7 +70,8 @@ struct TestCase {
     int distance;
 };
 
-int main() {
+int main()
+{
     std::vector<TestCase> tests{
         {1, 0},
         {9, 2},

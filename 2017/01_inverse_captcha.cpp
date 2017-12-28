@@ -4,7 +4,8 @@
 #include <vector>
 
 // Convert the line to a list of digits.
-std::vector<int> read_digits(const std::string& line) {
+std::vector<int> read_digits(const std::string& line)
+{
     std::vector<int> digits(line.size());
     std::transform(
         std::cbegin(line), std::cend(line), std::begin(digits),
@@ -15,7 +16,8 @@ std::vector<int> read_digits(const std::string& line) {
 
 // Return the sum of all digits that are equal to the digit halfway around the
 // circular list (assuming that the number of digits is even).
-int reverse_captcha(const std::vector<int>& digits) {
+int reverse_captcha(const std::vector<int>& digits)
+{
     std::vector<int> copy{digits};
     std::rotate(
         std::begin(copy), std::begin(copy) + digits.size() / 2,
@@ -33,7 +35,8 @@ int reverse_captcha(const std::vector<int>& digits) {
     return sum;
 }
 
-int main() {
+int main()
+{
     std::string line;
     while (std::getline(std::cin, line)) {
         std::cout << reverse_captcha(read_digits(line)) << '\n';

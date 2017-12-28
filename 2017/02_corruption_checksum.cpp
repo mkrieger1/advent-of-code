@@ -10,7 +10,8 @@ class Row {
 
 public:
     // Create a row from a string of whitespace-delimited numbers.
-    Row(const std::string& line) {
+    Row(const std::string& line)
+    {
         std::stringstream stream{line};
         std::copy(
             std::istream_iterator<int>{stream},
@@ -20,7 +21,8 @@ public:
     }
 
     // Return the difference between the smallest and the largest number.
-    int max_difference() const {
+    int max_difference() const
+    {
         if (numbers.empty()) { return 0; }
         auto max{std::max_element(std::begin(numbers), std::end(numbers))};
         auto min{std::min_element(std::begin(numbers), std::end(numbers))};
@@ -30,7 +32,8 @@ public:
     // Return the ratio between the only two evenly divisible numbers.
     // Assumes that there exists only one such pair of numbers.
     // Assumes that the row doesn't contain the same number more than once.
-    int evenly_divisible_ratio() const {
+    int evenly_divisible_ratio() const
+    {
         for (auto p = std::begin(numbers); p != std::end(numbers); ++p) {
             for (auto q = p + 1; q != std::end(numbers); ++q) {
                 int small, large;
@@ -49,7 +52,8 @@ public:
 class Spreadsheet {
     std::vector<Row> rows;
 
-    friend std::istream& operator>>(std::istream& input, Spreadsheet& sheet) {
+    friend std::istream& operator>>(std::istream& input, Spreadsheet& sheet)
+    {
         std::string line;
         while (std::getline(input, line)) {
             sheet.rows.push_back(Row(line));
@@ -60,7 +64,8 @@ class Spreadsheet {
 public:
     // Return the sum of the maximum difference between any two numbers in
     // each row.
-    int sum_rows_max_difference() {
+    int sum_rows_max_difference()
+    {
         int result{0};
         for (const auto &row : rows) {
             result += row.max_difference();
@@ -70,7 +75,8 @@ public:
 
     // Return the sum of the ratio between the two evenly divisible numbers in
     // each row.
-    int sum_rows_evenly_divisible_ratio() {
+    int sum_rows_evenly_divisible_ratio()
+    {
         int result{0};
         for (const auto &row : rows) {
             result += row.evenly_divisible_ratio();
@@ -80,7 +86,8 @@ public:
 };
 
 
-int main() {
+int main()
+{
     Spreadsheet sheet;
     std::cin >> sheet;
     std::cout << sheet.sum_rows_evenly_divisible_ratio() << '\n';
