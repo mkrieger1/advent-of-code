@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cmath>
 #include <iostream>
+#include <stdexcept>
 #include <vector>
 
 // Address:
@@ -40,6 +41,12 @@ struct Polar {
     using Radius = std::size_t;
     using Angle = std::size_t;
 
+    struct InvalidAngle : public std::runtime_error {
+        InvalidAngle()
+            : std::runtime_error("Angle is too large.") // TODO include values
+        {}
+    };
+
     // Return the maximum angle for the given radius.
     // 0 -> 0, 1 -> 7, 2 -> 15, 3 -> 23
     static Angle max_angle(const Radius& r)
@@ -53,10 +60,7 @@ struct Polar {
     Polar(const Radius& r_, const Angle& phi_)
     : r{r_}, phi{phi_}
     {
-        if (phi_ > max_angle(r_)) {
-            throw "Angle too large.";
-            // TODO throw appropriate exception
-        }
+        if (phi_ > max_angle(r_)) throw InvalidAngle();
     }
 
     Radius r{0};
@@ -69,6 +73,12 @@ public:
     using Address = std::size_t;
     using LateralDistance = long long int;
     using Distance = std::size_t;
+
+    struct InvalidAddress : public std::runtime_error {
+        InvalidAddress()
+            : std::runtime_error("Address must be 1 or greater.")
+        {}
+    };
 
 private:
     // Return the number of locations within the radius.
@@ -104,10 +114,7 @@ public:
       : polar_{polar_from_address(addr)},
         addr_{addr}
     {
-        if (addr < 1) {
-            throw "Address must be 1 or higher.";
-            // TODO throw appropriate exception
-        }
+        if (addr < 1) throw InvalidAddress();
     }
 
     Polar::Radius radius() const { return polar_.r; }
