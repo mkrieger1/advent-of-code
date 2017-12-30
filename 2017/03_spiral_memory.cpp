@@ -36,103 +36,125 @@
 
 // Distance = Radius + Angle
 
-struct Radius { std::size_t value; };
-struct Phase { std::size_t value; };
-struct Address { std::size_t value; };
+struct Polar {
+    using Radius = std::size_t;
+    using Phase = std::size_t;
 
-// Return the number of locations within the radius.
-// 0 -> 1,  1 -> 9,  2 -> 25,  ...
-std::size_t num_locations(const Radius& r)
-{
-    return std::pow(2 * r.value + 1, 2);
-}
-
-// Return the maximum phase for the given radius.
-// 0 -> 0, 1 -> 7, 2 -> 15, 3 -> 23
-Phase max_phase(const Radius& r)
-{
-    if (r.value == 0) return {0};
-    return {8 * r.value - 1};
-}
-
-class Location {
-public:
-    Location(const Radius& r, const Phase& ph)
-      : r_{r},
-        ph_{ph},
-        addr_{static_cast<std::size_t>(
-            r.value == 0 ? 1
-            : std::pow(2 * r.value - 1, 2) + ph.value + 1
-        )}
+    // Return the maximum phase for the given radius.
+    // 0 -> 0, 1 -> 7, 2 -> 15, 3 -> 23
+    static Phase max_phase(const Radius& r)
     {
-        if (ph.value > max_phase(r).value) {
+        if (r == 0) return 0;
+        return 8 * r - 1;
+    }
+
+    Polar() = default;
+
+    Polar(const Radius& r_, const Phase& phi_)
+    : r{r_}, phi{phi_}
+    {
+        if (phi_ > max_phase(r_)) {
             throw "Phase too large.";
             // TODO throw appropriate exception
         }
     }
 
+    Radius r{0};
+    Phase phi{0};
+};
+
+
+class Location {
+public:
+    using Address = std::size_t;
+    using LateralDistance = long long int;
+    using Distance = std::size_t;
+
+private:
+    // Return the number of locations within the radius.
+    // 0 -> 1,  1 -> 9,  2 -> 25,  ...
+    static std::size_t num_locations(const Polar::Radius& r)
+    {
+        return std::pow(2 * r + 1, 2);
+    }
+
+    // Return the address of the location given the polar coordinates.
+    static Address address_from_polar(const Polar& p)
+    {
+        if (p.r == 0) return 1;
+        return num_locations(p.r - 1) + p.phi + 1;
+    }
+
+    // Return the polar coordinates of the location with the given address.
+    static Polar polar_from_address(const Address& addr)
+    {
+        Polar p;
+        while (num_locations(p.r) < addr) ++p.r;
+        if (p.r > 0) p.phi = addr - num_locations(p.r - 1);
+        return p;
+    }
+
+public:
+    Location(const Polar& p)
+      : polar_{p},
+        addr_{address_from_polar(p)}
+    {}
+
     Location(const Address& addr)
-      : r_{0},
-        ph_{0},
+      : polar_{polar_from_address(addr)},
         addr_{addr}
     {
-        if (addr.value < 1) {
+        if (addr < 1) {
             throw "Address must be 1 or higher.";
             // TODO throw appropriate exception
         }
-        while (num_locations(r_) < addr.value) ++r_.value;
-        if (r_.value > 0) {
-            std::size_t num{num_locations({r_.value - 1})};
-            ph_ = {addr.value - num};
-        }
     }
 
-    Radius radius() const { return r_; }
-    Phase phase() const { return ph_; }
+    Polar::Radius radius() const { return polar_.r; }
+    Polar::Phase phase() const { return polar_.phi; }
     Address address() const { return addr_; }
 
-    int angle() const
+    LateralDistance lateral_distance() const
     {
-        if (r_.value == 0) return 0;
-        int signed_angle(ph_.value % (2 * r_.value) - r_.value);
+        if (polar_.r == 0) return 0;
+        long long signed_angle(polar_.phi % (2 * polar_.r) - polar_.r);
         return std::abs(signed_angle);
     }
 
-    int distance() const
+    Distance distance() const
     {
-        return r_.value + angle();
+        return polar_.r + lateral_distance();
     }
 
 private:
-    Radius r_{0};
-    Phase ph_{0};
+    Polar polar_;
     Address addr_{1};
 };
 
 struct TestCase {
     Location location;
-    int distance;
+    Location::Distance distance;
 };
 
 int main()
 {
     std::vector<TestCase> tests{
-        {{Address{1}}, 0},
-        {{Address{9}}, 2},
-        {{Address{10}}, 3},
-        {{Address{11}}, 2},
-        {{Address{12}}, 3},
-        {{Address{13}}, 4},
-        {{Address{14}}, 3},
-        {{Address{23}}, 2},
-        {{Address{1024}}, 31}
+        {{1}, 0},
+        {{9}, 2},
+        {{10}, 3},
+        {{11}, 2},
+        {{12}, 3},
+        {{13}, 4},
+        {{14}, 3},
+        {{23}, 2},
+        {{1024}, 31}
     };
 
     for (auto const& test : tests) {
         assert(test.location.distance() == test.distance);
     }
 
-    std::size_t a;
+    Location::Address a;
     std::cin >> a;
-    std::cout << Location{Address{a}}.distance() << '\n';
+    std::cout << Location{a}.distance() << '\n';
 }
