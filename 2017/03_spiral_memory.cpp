@@ -19,12 +19,14 @@
 //  2  1  1  1  2
 //  2  2  2  2  2
 
-// Lateral distance:
-//  2  1  0  1  2
-//  1  1  0  1  1
-//  0  0  0  0  0
-//  1  1  0  1  1
-//  2  1  0  1  2
+// Lateral offset:
+//  3  2  1  0 -1 -2  3
+// -2  2  1  0 -1  2  2
+// -1 -1  1  0  1  1  1
+//  0  0  0  0  0  0  0
+//  1  1  1  0  1 -1 -1
+//  2  2 -1  0  1  2 -2
+//  3 -2 -1  0  1  2  3
 
 // Angle:
 // 11 10  9  8  7  6  5
@@ -35,7 +37,7 @@
 // 16 11 12 13 14 15  0
 // 17 18 19 20 21 22 23
 
-// Distance = Radius + Lateral distance
+// Distance = Radius + abs(Lateral offset)
 
 struct Polar {
     using Radius = std::size_t;
@@ -71,7 +73,7 @@ struct Polar {
 class Location {
 public:
     using Address = std::size_t;
-    using LateralDistance = long long int;
+    using LateralOffset = long long int;
     using Distance = std::size_t;
 
     struct InvalidAddress : public std::runtime_error {
@@ -100,7 +102,7 @@ private:
     {
         Polar p;
         while (num_locations(p.r) < addr) ++p.r;
-        if (p.r > 0) p.phi = addr - num_locations(p.r - 1);
+        if (p.r > 0) p.phi = addr - num_locations(p.r - 1) - 1;
         return p;
     }
 
@@ -121,17 +123,16 @@ public:
     Polar::Angle angle() const { return polar_.phi; }
     Address address() const { return addr_; }
 
-    LateralDistance lateral_distance() const
+    LateralOffset lateral_offset() const
     {
         Polar::Radius r{radius()};
         if (r == 0) return 0;
-        long long signed_angle(angle() % (2 * r) - r);
-        return std::abs(signed_angle);
+        return angle() % (2 * r) - r + 1;
     }
 
     Distance distance() const
     {
-        return radius() + lateral_distance();
+        return radius() + std::abs(lateral_offset());
     }
 
 private:
