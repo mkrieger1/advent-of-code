@@ -123,14 +123,15 @@ public:
 
     LateralDistance lateral_distance() const
     {
-        if (polar_.r == 0) return 0;
-        long long signed_angle(polar_.phi % (2 * polar_.r) - polar_.r);
+        Polar::Radius r{radius()};
+        if (r == 0) return 0;
+        long long signed_angle(angle() % (2 * r) - r);
         return std::abs(signed_angle);
     }
 
     Distance distance() const
     {
-        return polar_.r + lateral_distance();
+        return radius() + lateral_distance();
     }
 
 private:
