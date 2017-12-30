@@ -18,14 +18,14 @@
 //  2  1  1  1  2
 //  2  2  2  2  2
 
-// Angle:
+// Lateral distance:
 //  2  1  0  1  2
 //  1  1  0  1  1
 //  0  0  0  0  0
 //  1  1  0  1  1
 //  2  1  0  1  2
 
-// Phase:
+// Angle:
 // 11 10  9  8  7  6  5
 // 12  7  6  5  4  3  4
 // 13  8  3  2  1  2  3
@@ -34,15 +34,15 @@
 // 16 11 12 13 14 15  0
 // 17 18 19 20 21 22 23
 
-// Distance = Radius + Angle
+// Distance = Radius + Lateral distance
 
 struct Polar {
     using Radius = std::size_t;
-    using Phase = std::size_t;
+    using Angle = std::size_t;
 
-    // Return the maximum phase for the given radius.
+    // Return the maximum angle for the given radius.
     // 0 -> 0, 1 -> 7, 2 -> 15, 3 -> 23
-    static Phase max_phase(const Radius& r)
+    static Angle max_angle(const Radius& r)
     {
         if (r == 0) return 0;
         return 8 * r - 1;
@@ -50,17 +50,17 @@ struct Polar {
 
     Polar() = default;
 
-    Polar(const Radius& r_, const Phase& phi_)
+    Polar(const Radius& r_, const Angle& phi_)
     : r{r_}, phi{phi_}
     {
-        if (phi_ > max_phase(r_)) {
-            throw "Phase too large.";
+        if (phi_ > max_angle(r_)) {
+            throw "Angle too large.";
             // TODO throw appropriate exception
         }
     }
 
     Radius r{0};
-    Phase phi{0};
+    Angle phi{0};
 };
 
 
@@ -111,7 +111,7 @@ public:
     }
 
     Polar::Radius radius() const { return polar_.r; }
-    Polar::Phase phase() const { return polar_.phi; }
+    Polar::Angle angle() const { return polar_.phi; }
     Address address() const { return addr_; }
 
     LateralDistance lateral_distance() const
