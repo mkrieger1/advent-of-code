@@ -79,7 +79,7 @@ public:
     Polar::Radius radius() const;
     Polar::Angle angle() const;
     LateralOffset lateral_offset() const;
-    Distance distance() const;
+    Distance distance_origin() const;
 
 private:
     // Return the number of locations within the radius.

@@ -24,10 +24,10 @@ int main()
     };
 
     for (auto const& test : tests) {
-        assert(test.location.distance() == test.distance);
+        assert(test.location.distance_origin() == test.distance);
     }
 
     Location::Address a;
     std::cin >> a;
-    std::cout << Location{a}.distance() << '\n';
+    std::cout << Location{a}.distance_origin() << '\n';
 }

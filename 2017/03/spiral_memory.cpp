@@ -81,7 +81,7 @@ Location::LateralOffset Location::lateral_offset() const
     return angle() % (2 * r) - r + 1;
 }
 
-Location::Distance Location::distance() const
+Location::Distance Location::distance_origin() const
 {
     return radius() + std::abs(lateral_offset());
 }
