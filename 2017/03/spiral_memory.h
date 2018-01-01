@@ -61,17 +61,7 @@ public:
     // 43 44 45 46 47 48 49
     using Address = std::size_t;
 
-    // Lateral offset:
-    //  3  2  1  0 -1 -2  3
-    // -2  2  1  0 -1  2  2
-    // -1 -1  1  0  1  1  1
-    //  0  0  0  0  0  0  0
-    //  1  1  1  0  1 -1 -1
-    //  2  2 -1  0  1  2 -2
-    //  3 -2 -1  0  1  2  3
-    using LateralOffset = long long int;
-
-    // Distance = Radius + abs(Lateral offset)
+    // Distance:
     //  4  3  2  3  4
     //  3  2  1  2  3
     //  2  1  0  1  2
@@ -92,7 +82,6 @@ public:
     Polar::Angle angle() const;
     Cartesian::Coordinate x() const;
     Cartesian::Coordinate y() const;
-    LateralOffset lateral_offset() const;
     Distance distance_origin() const;
 
 private:

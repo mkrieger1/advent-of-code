@@ -142,14 +142,7 @@ Cartesian::Coordinate Location::y() const
     return cartesian_.y;
 }
 
-Location::LateralOffset Location::lateral_offset() const
-{
-    Polar::Radius r{radius()};
-    if (r == 0) return 0;
-    return angle() % (2 * r) - r + 1;
-}
-
 Location::Distance Location::distance_origin() const
 {
-    return radius() + std::abs(lateral_offset());
+    return std::abs(x()) + std::abs(y());
 }
