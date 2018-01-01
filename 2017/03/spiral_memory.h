@@ -85,8 +85,8 @@ public:
     Distance distance_origin() const;
 
 private:
-    // Return the number of locations within the radius.
-    // 0 -> 1,  1 -> 9,  2 -> 25,  ...
+    // Return the number of locations with radius smaller than the given value.
+    // 0 -> 0,  1 -> 1,  2 -> 9, 3 -> 25,  ...
     static std::size_t num_locations(const Polar::Radius&);
 
     // Return the address of the location given the polar coordinates.

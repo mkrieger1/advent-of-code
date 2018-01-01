@@ -53,27 +53,25 @@ Cartesian Cartesian::rotated_clockwise()
     return {y, -x};
 }
 
-// Return the number of locations within the radius.
-// 0 -> 1,  1 -> 9,  2 -> 25,  ...
+// Return the number of locations with radius smaller than the given value.
+// 0 -> 0,  1 -> 1,  2 -> 9,  3 -> 25,  ...
 std::size_t Location::num_locations(const Polar::Radius& r)
 {
-    return std::pow(2 * r + 1, 2);
+    if (r == 0) return 0;
+    return std::pow(2 * r - 1, 2);
 }
 
 // Return the address of the location given the polar coordinates.
 Location::Address Location::address_from_polar(const Polar& p)
 {
-    if (p.r == 0) return 1;
-    return num_locations(p.r - 1) + p.phi + 1;
+    return num_locations(p.r) + p.phi + 1;
 }
 
 // Return the polar coordinates of the location with the given address.
 Polar Location::polar_from_address(const Address& addr)
 {
-    Polar p;
-    p.r = std::ceil((std::sqrt(addr) - 1) / 2);
-    if (p.r > 0) p.phi = addr - num_locations(p.r - 1) - 1;
-    return p;
+    Polar::Radius r(std::ceil((std::sqrt(addr) - 1) / 2));
+    return {r, addr - num_locations(r) - 1};
 }
 
 // Return the cartesian coordinates of the location given the polar coordinates.
