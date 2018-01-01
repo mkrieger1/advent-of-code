@@ -14,7 +14,7 @@ struct TestCaseCartesian {
     Cartesian coords;
 };
 
-int main()
+void run_tests()
 {
     std::vector<TestCaseDistance> tests_distance{
         {1, 0},
@@ -50,6 +50,11 @@ int main()
         Location loc2{Cartesian{test.coords.x, test.coords.y}};
         assert(loc2.address() == test.address);
     }
+}
+
+int main()
+{
+    run_tests();
 
     Location::Address a;
     std::cin >> a;
