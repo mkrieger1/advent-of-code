@@ -38,6 +38,13 @@ struct Polar {
     Angle phi{0};
 };
 
+struct Cartesian {
+    using Coordinate = long long int;
+
+    Coordinate x{0};
+    Coordinate y{0};
+};
+
 class Location {
 public:
     // Address:
@@ -78,6 +85,8 @@ public:
     Address address() const;
     Polar::Radius radius() const;
     Polar::Angle angle() const;
+    Cartesian::Coordinate x() const;
+    Cartesian::Coordinate y() const;
     LateralOffset lateral_offset() const;
     Distance distance_origin() const;
 
@@ -92,7 +101,11 @@ private:
     // Return the polar coordinates of the location with the given address.
     static Polar polar_from_address(const Address&);
 
+    // Return the cartesian coordinates of the location given the polar coordinates.
+    static Cartesian cartesian_from_polar(const Polar&);
+
     Polar polar_;
+    Cartesian cartesian_;
     Address addr_{1};
 };
 

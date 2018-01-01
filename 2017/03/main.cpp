@@ -9,6 +9,11 @@ struct TestCaseDistance {
     Location::Distance distance;
 };
 
+struct TestCaseCartesian {
+    Location::Address address;
+    Cartesian coords;
+};
+
 int main()
 {
     std::vector<TestCaseDistance> tests_distance{
@@ -23,8 +28,25 @@ int main()
         {1024, 31}
     };
 
+    std::vector<TestCaseCartesian> tests_cartesian{
+        {1, {0, 0}},
+        {9, {1, -1}},
+        {10, {2, -1}},
+        {11, {2, 0}},
+        {12, {2, 1}},
+        {13, {2, 2}},
+        {14, {1, 2}},
+        {23, {0, -2}}
+    };
+
     for (auto const& test : tests_distance) {
         assert(Location{test.address}.distance_origin() == test.distance);
+    }
+
+    for (auto const& test : tests_cartesian) {
+        Location loc{test.address};
+        assert(loc.x() == test.coords.x);
+        assert(loc.y() == test.coords.y);
     }
 
     Location::Address a;

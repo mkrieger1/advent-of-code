@@ -1,5 +1,6 @@
 #include "spiral_memory.h"
 
+#include <cassert>
 #include <cmath>
 
 Polar::InvalidAngle::InvalidAngle()
@@ -18,11 +19,13 @@ Polar::Polar(const Radius& r_, const Angle& phi_)
 
 Location::Location(const Polar& p)
   : polar_{p},
+    cartesian_{cartesian_from_polar(p)},
     addr_{address_from_polar(p)}
 {}
 
 Location::Location(const Address& addr)
   : polar_{polar_from_address(addr)},
+    cartesian_{cartesian_from_polar(polar_)},
     addr_{addr}
 {
     if (addr < 1) throw InvalidAddress();
@@ -59,6 +62,27 @@ Polar Location::polar_from_address(const Address& addr)
     return p;
 }
 
+// Return the cartesian coordinates of the location given the polar coordinates.
+Cartesian Location::cartesian_from_polar(const Polar& p)
+{
+    if (p.r == 0) return {0, 0};
+
+    auto side_length{2 * p.r};
+    auto side{p.phi / side_length};
+    assert(0 <= side && side < 4);
+
+    Cartesian::Coordinate u(p.r);
+    Cartesian::Coordinate v(p.phi % side_length - side_length / 2 + 1);
+    assert(-u < v && v <= u);
+
+    switch (side) {
+        case 0:  return { u,  v};
+        case 1:  return {-v,  u};
+        case 2:  return {-u, -v};
+        default: return { v, -u};
+    }
+}
+
 Polar::Radius Location::radius() const
 {
     return polar_.r;
@@ -72,6 +96,16 @@ Polar::Angle Location::angle() const
 Location::Address Location::address() const
 {
     return addr_;
+}
+
+Cartesian::Coordinate Location::x() const
+{
+    return cartesian_.x;
+}
+
+Cartesian::Coordinate Location::y() const
+{
+    return cartesian_.y;
 }
 
 Location::LateralOffset Location::lateral_offset() const
