@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <stdexcept>
+#include <vector>
 
 struct Polar {
     // Radius:
@@ -83,6 +84,9 @@ public:
     Cartesian::Coordinate x() const;
     Cartesian::Coordinate y() const;
     Distance distance_origin() const;
+
+    // Return a list of the 8 neighbor locations.
+    std::vector<Location> neighbors() const;
 
 private:
     // Return the number of locations with radius smaller than the given value.

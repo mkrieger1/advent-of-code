@@ -144,3 +144,17 @@ Location::Distance Location::distance_origin() const
 {
     return std::abs(x()) + std::abs(y());
 }
+
+// Return a list of the 8 neighbor locations.
+std::vector<Location> Location::neighbors() const
+{
+    std::vector<Location> result;
+    Cartesian straight{1, 0}, diagonal{1, 1};
+    for (int i{0}; i < 4; ++i) {
+        result.push_back({Cartesian{x() + straight.x, y() + straight.y}});
+        result.push_back({Cartesian{x() + diagonal.x, y() + diagonal.y}});
+        straight = straight.rotated_clockwise();
+        diagonal = diagonal.rotated_clockwise();
+    }
+    return result;
+}

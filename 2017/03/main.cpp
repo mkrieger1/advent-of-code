@@ -1,8 +1,10 @@
 #include "spiral_memory.h"
 
 #include <cassert>
+#include <cstddef>
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 
 struct TestCaseDistance {
     Location::Address address;
@@ -52,6 +54,24 @@ void run_tests()
     }
 }
 
+using SpiralSum = std::size_t;
+using SpiralSums = std::unordered_map<Location::Address, SpiralSum>;
+
+SpiralSum get_sum(Location::Address addr, SpiralSums& sums)
+{
+    auto result{sums.find(addr)};
+    if (result != std::end(sums)) return result->second;
+
+    SpiralSum s{0};
+    for (auto const& n : Location{addr}.neighbors()) {
+        if (n.address() < addr) {
+            s += get_sum(n.address(), sums);
+        }
+    }
+    sums.insert({addr, s});
+    return s;
+}
+
 int main()
 {
     run_tests();
@@ -59,4 +79,15 @@ int main()
     Location::Address a;
     std::cin >> a;
     std::cout << Location{a}.distance_origin() << '\n';
+
+    SpiralSum target;
+    std::cout << "Enter a target sum: ";
+    std::cin >> target;
+
+    Location::Address addr{1};
+    SpiralSums sums{{addr, 1}};
+    SpiralSum s{};
+    while ((s = get_sum(addr, sums)) <= target) ++addr;
+    std::cout << "The first value written larger than " << target
+              << " is " << s << '\n';
 }
