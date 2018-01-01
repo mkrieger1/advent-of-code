@@ -71,7 +71,7 @@ Location::Address Location::address_from_polar(const Polar& p)
 Polar Location::polar_from_address(const Address& addr)
 {
     Polar p;
-    while (num_locations(p.r) < addr) ++p.r;
+    p.r = std::ceil((std::sqrt(addr) - 1) / 2);
     if (p.r > 0) p.phi = addr - num_locations(p.r - 1) - 1;
     return p;
 }
