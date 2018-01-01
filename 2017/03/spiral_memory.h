@@ -41,6 +41,10 @@ struct Polar {
 struct Cartesian {
     using Coordinate = long long int;
 
+    // Return the coordinates rotated clockwise by 90 degrees.
+    // (1, 0) -> (0, -1) -> (-1, 0) -> (0, 1)
+    Cartesian rotated_clockwise();
+
     Coordinate x{0};
     Coordinate y{0};
 };
@@ -81,6 +85,7 @@ public:
 
     Location(const Address&);
     Location(const Polar&);
+    Location(const Cartesian&);
 
     Address address() const;
     Polar::Radius radius() const;
@@ -103,6 +108,9 @@ private:
 
     // Return the cartesian coordinates of the location given the polar coordinates.
     static Cartesian cartesian_from_polar(const Polar&);
+
+    // Return the polar coordinates of the location given the cartesian coordinates.
+    static Polar polar_from_cartesian(const Cartesian&);
 
     Polar polar_;
     Cartesian cartesian_;

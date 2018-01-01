@@ -1,5 +1,6 @@
 #include "spiral_memory.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cmath>
 
@@ -23,6 +24,12 @@ Location::Location(const Polar& p)
     addr_{address_from_polar(p)}
 {}
 
+Location::Location(const Cartesian& c)
+  : polar_{polar_from_cartesian(c)},
+    cartesian_{c},
+    addr_{address_from_polar(polar_)}
+{}
+
 Location::Location(const Address& addr)
   : polar_{polar_from_address(addr)},
     cartesian_{cartesian_from_polar(polar_)},
@@ -37,6 +44,13 @@ Polar::Angle Polar::max_angle(const Radius& r)
 {
     if (r == 0) return 0;
     return 8 * r - 1;
+}
+
+// Return the coordinates rotated clockwise by 90 degrees.
+// (1, 0) -> (0, -1) -> (-1, 0) -> (0, 1)
+Cartesian Cartesian::rotated_clockwise()
+{
+    return {y, -x};
 }
 
 // Return the number of locations within the radius.
@@ -81,6 +95,26 @@ Cartesian Location::cartesian_from_polar(const Polar& p)
         case 2:  return {-u, -v};
         default: return { v, -u};
     }
+}
+
+// Return the polar coordinates of the location given the cartesian coordinates.
+Polar Location::polar_from_cartesian(const Cartesian& c)
+{
+    if (c.x == 0 && c.y == 0) return {0, 0};
+
+    int side{0};
+    Cartesian t{c};
+
+    while (!(-t.x < t.y && t.y <= t.x)) {
+        ++side;
+        t = t.rotated_clockwise();
+    }
+    assert(side < 4);
+
+    Polar::Radius r(t.x);
+    auto side_length{2 * r};
+    Polar::Angle phi{side * side_length + side_length / 2 + t.y - 1};
+    return {r, phi};
 }
 
 Polar::Radius Location::radius() const

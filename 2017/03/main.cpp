@@ -47,6 +47,8 @@ int main()
         Location loc{test.address};
         assert(loc.x() == test.coords.x);
         assert(loc.y() == test.coords.y);
+        Location loc2{Cartesian{test.coords.x, test.coords.y}};
+        assert(loc2.address() == test.address);
     }
 
     Location::Address a;
