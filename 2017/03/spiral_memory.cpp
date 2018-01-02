@@ -3,9 +3,16 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <string>
 
-Polar::InvalidAngle::InvalidAngle()
-  : std::runtime_error("Angle is too large.") // TODO include values
+Polar::InvalidAngle::InvalidAngle(
+    const Radius& r, const Angle& max, const Angle& wrong
+)
+  : std::runtime_error{
+      "At radius " + std::to_string(r)
+      + ", the maximum angle is " + std::to_string(max)
+      + " (got " + std::to_string(wrong) + ")."
+    }
 {}
 
 Location::InvalidAddress::InvalidAddress()
@@ -15,7 +22,8 @@ Location::InvalidAddress::InvalidAddress()
 Polar::Polar(const Radius& r_, const Angle& phi_)
   : r{r_}, phi{phi_}
 {
-    if (phi_ > max_angle(r_)) throw InvalidAngle();
+    auto max{max_angle(r_)};
+    if (phi_ > max) throw InvalidAngle(r_, max, phi_);
 }
 
 Location::Location(const Polar& p)
@@ -31,11 +39,11 @@ Location::Location(const Cartesian& c)
 {}
 
 Location::Location(const Address& addr)
-  : polar_{polar_from_address(addr)},
-    cartesian_{cartesian_from_polar(polar_)},
-    addr_{addr}
+  : addr_{addr}
 {
     if (addr < 1) throw InvalidAddress();
+    polar_ = polar_from_address(addr);
+    cartesian_ = cartesian_from_polar(polar_);
 }
 
 // Return the maximum angle for the given radius.

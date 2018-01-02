@@ -25,7 +25,7 @@ struct Polar {
     using Angle = std::size_t;
 
     struct InvalidAngle : public std::runtime_error {
-        InvalidAngle();
+        InvalidAngle(const Radius& r, const Angle& max, const Angle& wrong);
     };
 
     // Return the maximum angle for the given radius.
