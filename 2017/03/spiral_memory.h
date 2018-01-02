@@ -83,6 +83,9 @@ public:
     Polar::Angle angle() const;
     Cartesian::Coordinate x() const;
     Cartesian::Coordinate y() const;
+
+    // Return the Manhattan distance from the location to the location at
+    // address 1.
     Distance distance_origin() const;
 
     // Return a list of the 8 neighbor locations.

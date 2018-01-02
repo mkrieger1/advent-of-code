@@ -72,14 +72,18 @@ SpiralSum get_sum(Location::Address addr, SpiralSums& sums)
     return s;
 }
 
-int main()
+void part1()
 {
-    run_tests();
+    Location::Address addr;
+    std::cout << "Enter an address: ";
+    std::cin >> addr;
+    Location loc{addr};
+    std::cout << "The distance of address " << addr
+              << " is " << loc.distance_origin() << '\n';
+}
 
-    Location::Address a;
-    std::cin >> a;
-    std::cout << Location{a}.distance_origin() << '\n';
-
+void part2()
+{
     SpiralSum target;
     std::cout << "Enter a target sum: ";
     std::cin >> target;
@@ -90,4 +94,11 @@ int main()
     while ((s = get_sum(addr, sums)) <= target) ++addr;
     std::cout << "The first value written larger than " << target
               << " is " << s << '\n';
+}
+
+int main()
+{
+    run_tests();
+    part1();
+    part2();
 }

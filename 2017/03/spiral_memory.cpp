@@ -148,6 +148,8 @@ Cartesian::Coordinate Location::y() const
     return cartesian_.y;
 }
 
+// Return the Manhattan distance from the location to the location at
+// address 1.
 Location::Distance Location::distance_origin() const
 {
     return std::abs(x()) + std::abs(y());
