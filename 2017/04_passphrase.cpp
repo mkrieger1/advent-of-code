@@ -8,6 +8,7 @@
 using Word = std::string;
 using Phrase = std::vector<Word>;
 using WordCounts = std::unordered_map<Word, std::size_t>;
+using LetterCounts = std::unordered_map<char, std::size_t>;
 
 Phrase split_line(const std::string& line)
 {
@@ -16,6 +17,15 @@ Phrase split_line(const std::string& line)
     Word w;
     while (std::getline(linestream, w, ' ')) {
         if (!w.empty()) result.push_back(w);
+    }
+    return result;
+}
+
+LetterCounts count_letters(const Word& word)
+{
+    LetterCounts result;
+    for (auto const& c : word) {
+        ++result[c];
     }
     return result;
 }
@@ -29,11 +39,17 @@ WordCounts count_words(const Phrase& phrase)
     return result;
 }
 
+bool are_anagrams(const Word& w1, const Word& w2)
+{
+    return count_letters(w1) == count_letters(w2);
+}
+
 bool is_valid(const Phrase& phrase)
 {
-    WordCounts counts{count_words(phrase)};
-    for (auto const& count : counts) {
-        if (count.second > 1) return false;
+    for (auto i{0}; i < phrase.size(); ++i) {
+        for (auto j{0}; j < i; ++j) {
+            if (are_anagrams(phrase[i], phrase[j])) return false;
+        }
     }
     return true;
 }
