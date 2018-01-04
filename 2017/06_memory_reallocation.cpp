@@ -61,17 +61,25 @@ private:
     std::array<int, 16> banks_;
 };
 
-int main()
-{
-    MemoryBanks memory;
-    std::cin >> memory;
 
+std::size_t reallocations_until_loop(MemoryBanks& memory)
+{
     std::set<MemoryBanks> seen;
     while (seen.count(memory) == 0) {
         MemoryBanks copy{memory};
         seen.insert(copy);
         memory.reallocate();
     }
+    return seen.size();
+}
 
-    std::cout << seen.size() << '\n';
+
+int main()
+{
+    MemoryBanks memory;
+    std::cin >> memory;
+
+    std::cout << reallocations_until_loop(memory) << '\n';
+    // count again, starting from the last allocation before a cycle
+    std::cout << reallocations_until_loop(memory) << '\n';
 }
