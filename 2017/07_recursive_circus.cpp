@@ -1,6 +1,7 @@
 #include <iostream>
 #include <regex>
 #include <stdexcept>
+#include <unordered_map>
 #include <vector>
 
 class Program {
@@ -48,15 +49,8 @@ public:
         return input;
     }
 
-    void print()
-    {
-        std::cout << "name: " << name_ << '\n';
-        std::cout << "weight: " << weight_ << '\n';
-        std::cout << "supports:\n";
-        for (auto const& name : supported_) {
-            std::cout << name << '\n';
-        }
-    }
+    const std::string& name() const { return name_; }
+    const std::vector<std::string>& supported() const { return supported_; }
 
 private:
     std::string name_;
@@ -64,10 +58,30 @@ private:
     std::vector<std::string> supported_;
 };
 
+// Return map: program name -> name of supporting program
+std::unordered_map<std::string, std::string>
+supporter_map(const std::vector<Program>& programs)
+{
+    std::unordered_map<std::string, std::string> result;
+    for (auto const& supporter : programs) {
+        for (auto const& supported : supporter.supported()) {
+            result[supported] = supporter.name();
+        }
+    }
+    return result;
+}
+
 int main()
 {
+    std::vector<Program> programs;
     Program prog;
     while (std::cin >> prog) {
-        prog.print();
+        programs.push_back(prog);
+    }
+
+    auto supporters{supporter_map(programs)};
+    for (auto const& program : programs) {
+        if (supporters.find(program.name()) != std::end(supporters)) continue;
+        std::cout << program.name() << " not supported by any program!\n";
     }
 }
