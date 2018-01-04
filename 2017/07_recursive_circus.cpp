@@ -9,6 +9,7 @@ class Program {
     };
 
 public:
+    Program() = default;
     Program(const std::string& line)
     {
         std::smatch line_match;
@@ -32,6 +33,21 @@ public:
         }
     }
 
+    friend std::istream& operator>>(std::istream& input, Program& prog)
+    {
+        std::string line;
+        while (std::getline(std::cin, line)) {
+            try {
+                Program dummy{line};
+                std::swap(prog, dummy);
+                break;
+            } catch (InvalidFormat) {
+                continue;
+            }
+        }
+        return input;
+    }
+
     void print()
     {
         std::cout << "name: " << name_ << '\n';
@@ -50,9 +66,8 @@ private:
 
 int main()
 {
-    std::string line;
-    while(std::getline(std::cin, line)) {
-        Program prog{line};
+    Program prog;
+    while (std::cin >> prog) {
         prog.print();
     }
 }
