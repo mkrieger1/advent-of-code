@@ -1,6 +1,7 @@
 #include <array>
 #include <sstream>
 #include <iostream>
+#include <set>
 
 class MemoryBanks {
 public:
@@ -21,6 +22,16 @@ public:
             *bank = value;
         }
         return input;
+    }
+
+    // implement comparison to be able to insert it into a set
+    bool operator<(const MemoryBanks& other) const
+    {
+        for (auto i{0}; i < banks_.size(); ++i) {
+            if (banks_[i] == other.banks_[i]) continue;
+            return banks_[i] < other.banks_[i];
+        }
+        return false;
     }
 
     void reallocate()
@@ -46,14 +57,6 @@ public:
         }
     }
 
-    void print()
-    {
-        for (auto n : banks_) {
-            std::cout << n << ' ';
-        }
-        std::cout << '\n';
-    }
-
 private:
     std::array<int, 16> banks_;
 };
@@ -63,8 +66,12 @@ int main()
     MemoryBanks memory;
     std::cin >> memory;
 
-    for (auto i{0}; i < 10; ++i) {
+    std::set<MemoryBanks> seen;
+    while (seen.count(memory) == 0) {
+        MemoryBanks copy{memory};
+        seen.insert(copy);
         memory.reallocate();
-        memory.print();
     }
+
+    std::cout << seen.size() << '\n';
 }
