@@ -32,7 +32,13 @@ public:
     // assumes the jump would not exit the maze
     void jump()
     {
-        position_ = position_ + instructions_[position_]++;
+        auto old_position{position_};
+        position_ += instructions_[position_];
+        if (instructions_[old_position] >= 3) {
+            --instructions_[old_position];
+        } else {
+            ++instructions_[old_position];
+        }
     }
 
 private:
