@@ -58,12 +58,15 @@ private:
     std::vector<std::string> supported_;
 };
 
+using ProgramTower = std::unordered_map<std::string, Program>;
+
 // Return map: program name -> name of supporting program
 std::unordered_map<std::string, std::string>
-supporter_map(const std::vector<Program>& programs)
+supporter_map(const ProgramTower& programs)
 {
     std::unordered_map<std::string, std::string> result;
-    for (auto const& supporter : programs) {
+    for (auto const& name_prog : programs) {
+        auto supporter{name_prog.second};
         for (auto const& supported : supporter.supported()) {
             result[supported] = supporter.name();
         }
@@ -73,15 +76,16 @@ supporter_map(const std::vector<Program>& programs)
 
 int main()
 {
-    std::vector<Program> programs;
+    ProgramTower programs_by_name;
     Program prog;
     while (std::cin >> prog) {
-        programs.push_back(prog);
+        programs_by_name.insert({prog.name(), prog});
     }
 
-    auto supporters{supporter_map(programs)};
-    for (auto const& program : programs) {
-        if (supporters.find(program.name()) != std::end(supporters)) continue;
-        std::cout << program.name() << " not supported by any program!\n";
+    auto supporters{supporter_map(programs_by_name)};
+    for (auto const& name_prog : programs_by_name) {
+        auto name{name_prog.first};
+        if (supporters.find(name) != std::end(supporters)) continue;
+        std::cout << name << " not supported by any program!\n";
     }
 }
