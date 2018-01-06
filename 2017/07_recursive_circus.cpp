@@ -98,26 +98,12 @@ struct SearchResult {
 
 SearchResult wrong_weight(const ProgramTower& programs, const std::string& name)
 {
-    std::cout << "---------------- wrong weight: " << name << " --------------------\n";
-
     std::unordered_map<int, std::vector<std::string>> weights;
     for (auto const& sub : programs.at(name).supported()) {
         weights[total_weight(programs, sub)].push_back(sub);
     }
 
-    for (auto const& weight_subs : weights) {
-        std::cout << "weight: " << weight_subs.first;
-        for (auto const& sub : weight_subs.second) {
-            std::cout << ' ' << sub;
-        }
-        std::cout << '\n';
-    }
-
-    if (weights.size() == 1) {
-        std::cout << "-------------end wrong weight: " << name << "--------------------\n";
-
-        return {true, "", 0}; // name is balanced
-    }
+    if (weights.size() == 1) return {true, "", 0}; // name is balanced
 
     int correct_total_weight;
     std::string wrong_program;
@@ -126,9 +112,6 @@ SearchResult wrong_weight(const ProgramTower& programs, const std::string& name)
         auto subs{weight_subs.second};
         if (subs.size() != 1) {
             correct_total_weight = weight_subs.first;
-
-            std::cout << "correct total weight: " << correct_total_weight << '\n';
-
             continue;
         }
         // subs contains single sub-program with the wrong total weight
@@ -136,14 +119,8 @@ SearchResult wrong_weight(const ProgramTower& programs, const std::string& name)
         for (auto const& sub : subs) {
             auto result{wrong_weight(programs, sub)};
             if (!result.is_balanced) {
-                std::cout << sub << " is not balanced\n";
-
-                std::cout << "-------------end wrong weight: " << name << "--------------------\n";
-
                 return result;
             } else {
-                std::cout << sub << " is the wrong program\n";
-
                 wrong_program = sub;
                 continue;
             }
@@ -153,9 +130,6 @@ SearchResult wrong_weight(const ProgramTower& programs, const std::string& name)
         programs.at(wrong_program).weight()
         + correct_total_weight - total_weight(programs, wrong_program)
     };
-
-    std::cout << "-------------end wrong weight: " << name << "--------------------\n";
-
     return {false, wrong_program, correct_weight};
 }
 
