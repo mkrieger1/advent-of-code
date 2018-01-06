@@ -156,7 +156,7 @@ SearchResult wrong_weight(const ProgramTower& programs, const std::string& name)
 
     std::cout << "-------------end wrong weight: " << name << "--------------------\n";
 
-    return {true, wrong_program, correct_weight};
+    return {false, wrong_program, correct_weight};
 }
 
 int main()
