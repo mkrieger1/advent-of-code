@@ -5,12 +5,18 @@
 #include <vector>
 
 class Program {
+public:
+    using Name = std::string;
+
     struct InvalidFormat : public std::runtime_error {
         InvalidFormat() : std::runtime_error("Line has invalid format.") {};
     };
 
-public:
     Program() = default;
+    Program(const Name& name, int weight, std::vector<Name> supported)
+      : name_{name}, weight_{weight}, supported_{supported}
+    {}
+
     Program(const std::string& line)
     {
         std::smatch line_match;
@@ -49,56 +55,67 @@ public:
         return input;
     }
 
-    const std::string& name() const { return name_; }
+    const Name& name() const { return name_; }
     int weight() const { return weight_; }
-    const std::vector<std::string>& supported() const { return supported_; }
+    const std::vector<Name>& supported() const { return supported_; }
 
 private:
-    std::string name_;
+    Name name_;
     int weight_;
-    std::vector<std::string> supported_;
+    std::vector<Name> supported_;
 };
 
 class ProgramTower {
     // map name -> program with that name
-    using NameMap = std::unordered_map<std::string, Program>;
+    using NameMap = std::unordered_map<Program::Name, Program>;
     // map program name -> name of supporting program
-    using SupportMap = std::unordered_map<std::string, std::string>;
+    using SupportMap = std::unordered_map<Program::Name, Program::Name>;
+
+    // Return a map of which program is supported by which.
+    static SupportMap build_support_map(const NameMap& programs)
+    {
+        SupportMap result;
+        for (auto const& name_prog : programs) {
+            auto supporter{name_prog.second};
+            for (auto const& supported : supporter.supported()) {
+                result.insert({supported, supporter.name()});
+            }
+        }
+        return result;
+    }
+
+    // Find the base program (the one which is not supported by any other).
+    static Program::Name find_base(
+        const NameMap& programs, const SupportMap& support)
+    {
+        for (auto const& name_prog : programs) {
+            auto name{name_prog.first};
+            if (support.find(name) == std::end(support)) return name;
+        }
+        throw std::runtime_error("No program is the base.");
+    }
 
 public:
     ProgramTower() = default;
-    ProgramTower(const std::vector<Program>&); // TODO?
+    ProgramTower(const NameMap& programs)
+      : programs_{programs},
+        support_{build_support_map(programs_)},
+        base_{find_base(programs_, support_)}
+    {}
 
     friend std::istream& operator>>(std::istream& input, ProgramTower& tower)
     {
-        // read all programs
+        NameMap programs;
         Program prog;
-        while (input >> prog) {
-            tower.programs_.insert({prog.name(), prog});
-        }
-
-        // build map of which program is supported by which
-        for (auto const& name_prog : tower.programs_) {
-            auto supporter{name_prog.second};
-            for (auto const& supported : supporter.supported()) {
-                tower.support_.insert({supported, supporter.name()});
-            }
-        }
-
-        // find base program (the one which is not supported by any other)
-        for (auto const& name_prog : tower.programs_) {
-            auto name{name_prog.first};
-            if (tower.support_.find(name) == std::end(tower.support_)) {
-                tower.base_ = name;
-            }
-        }
-
+        while (input >> prog) programs.insert({prog.name(), prog});
+        ProgramTower dummy{programs};
+        std::swap(tower, dummy);
         return input;
     }
 
     // Return the total weight of the program with the given name, and all
     // sub-towers it is supporting.
-    int total_weight(const std::string& name)
+    int total_weight(const Program::Name& name)
     {
         auto base{programs_.at(name)};
         int result{base.weight()};
@@ -113,13 +130,13 @@ public:
     // unbalanced).  Assumes that there is exactly one such program.
     struct SearchResult {
         bool is_balanced;
-        std::string name;
+        Program::Name name;
         int correct_weight;
     };
 
-    SearchResult wrong_weight(const std::string& name)
+    SearchResult wrong_weight(const Program::Name& name)
     {
-        std::unordered_map<int, std::vector<std::string>> weights;
+        std::unordered_map<int, std::vector<Program::Name>> weights;
         for (auto const& sub : programs_.at(name).supported()) {
             weights[total_weight(sub)].push_back(sub);
         }
@@ -127,7 +144,7 @@ public:
         if (weights.size() == 1) return {true, "", 0}; // name is balanced
 
         int correct_total_weight;
-        std::string wrong_program;
+        Program::Name wrong_program;
 
         for (auto const& weight_subs : weights) {
             auto subs{weight_subs.second};
@@ -154,12 +171,12 @@ public:
         return {false, wrong_program, correct_weight};
     }
 
-    std::string base() const { return base_; }
+    Program::Name base() const { return base_; }
 
 private:
-    std::string base_;
     NameMap programs_;
     SupportMap support_;
+    Program::Name base_;
 };
 
 
