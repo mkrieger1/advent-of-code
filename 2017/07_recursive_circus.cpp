@@ -124,6 +124,7 @@ public:
         }
         return result;
     }
+    int total_weight() { return total_weight(base()); }
 
     // Determine which program in the tower supported by the program with the
     // given name has the wrong weight (i.e. causes a sub-tower to be
@@ -170,6 +171,7 @@ public:
         };
         return {false, wrong_program, correct_weight};
     }
+    SearchResult wrong_weight() { return wrong_weight(base()); }
 
     Program::Name base() const { return base_; }
 
