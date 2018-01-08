@@ -7,14 +7,15 @@
 class Program {
 public:
     using Name = std::string;
+    using Weight = int;
 
     struct InvalidFormat : public std::runtime_error {
         InvalidFormat() : std::runtime_error("Line has invalid format.") {};
     };
 
     Program() = default;
-    Program(const Name& name, int weight, std::vector<Name> supported)
-      : name_{name}, weight_{weight}, supported_{supported}
+    Program(const Name& n, Weight w, std::vector<Name> supported)
+      : name_{n}, weight_{w}, supported_{supported}
     {}
 
     Program(const std::string& line)
@@ -56,12 +57,12 @@ public:
     }
 
     const Name& name() const { return name_; }
-    int weight() const { return weight_; }
+    Weight weight() const { return weight_; }
     const std::vector<Name>& supported() const { return supported_; }
 
 private:
     Name name_;
-    int weight_;
+    Weight weight_;
     std::vector<Name> supported_;
 };
 
@@ -115,16 +116,16 @@ public:
 
     // Return the total weight of the program with the given name, and all
     // sub-towers it is supporting.
-    int total_weight(const Program::Name& name)
+    Program::Weight total_weight(const Program::Name& name)
     {
         auto base{programs_.at(name)};
-        int result{base.weight()};
+        Program::Weight result{base.weight()};
         for (auto const& sub : base.supported()) {
             result += total_weight(sub);
         }
         return result;
     }
-    int total_weight() { return total_weight(base()); }
+    Program::Weight total_weight() { return total_weight(base()); }
 
     // Determine which program in the tower supported by the program with the
     // given name has the wrong weight (i.e. causes a sub-tower to be
@@ -132,12 +133,12 @@ public:
     struct SearchResult {
         bool is_balanced;
         Program::Name name;
-        int correct_weight;
+        Program::Weight correct_weight;
     };
 
     SearchResult wrong_weight(const Program::Name& name)
     {
-        std::unordered_map<int, std::vector<Program::Name>> weights;
+        std::unordered_map<Program::Weight, std::vector<Program::Name>> weights;
         for (auto const& sub : programs_.at(name).supported()) {
             weights[total_weight(sub)].push_back(sub);
         }
