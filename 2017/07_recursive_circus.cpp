@@ -67,9 +67,9 @@ private:
 };
 
 class ProgramTower {
-    // map name -> program with that name
+    // Map from name to program with that name.
     using NameMap = std::unordered_map<Program::Name, Program>;
-    // map program name -> name of supporting program
+    // Map from program name to name of supporting program.
     using SupportMap = std::unordered_map<Program::Name, Program::Name>;
 
     // Return a map of which program is supported by which.
@@ -129,33 +129,49 @@ public:
 
     // Determine which program in the tower supported by the program with the
     // given name has the wrong weight (i.e. causes a sub-tower to be
-    // unbalanced).  Assumes that there is exactly one such program.
-    struct SearchResult {
+    // unbalanced), assuming that there is exactly one such program.
+    struct BalanceResult {
         bool is_balanced;
         Program::Name name;
         Program::Weight correct_weight;
     };
 
-    SearchResult wrong_weight(const Program::Name& name)
+    BalanceResult wrong_weight(const Program::Name& name)
     {
+        // Map from weight to list of supported sub-towers with that weight.
         std::unordered_map<Program::Weight, std::vector<Program::Name>> weights;
         for (auto const& sub : programs_.at(name).supported()) {
             weights[total_weight(sub)].push_back(sub);
         }
 
-        if (weights.size() == 1) return {true, "", 0}; // name is balanced
+        // One unique weight
+        // -> This tower is balanced, no program in it has the wrong weight.
+        if (weights.size() == 1) {
+            return {true, "", 0};
+        }
 
+        // Not all supported sub-towers have the same total weight
+        // -> One of the programs in the sub-towers has the wrong weight (given
+        //    the problem statement we can assume that there is exactly one such
+        //    program).
+        //
+        // -> For N sub-towers,
+        //    N-1 sub-towers have total weight w1 (which is "correct")
+        //    and 1 sub-tower has total weight w2 (which is "wrong")
+        //
+        // If the "wrong" sub-tower itself is balanced, then its base program
+        // must be the one with the wrong weight. Otherwise it is obtained by
+        // recursion.
         int correct_total_weight;
         Program::Name wrong_program;
 
         for (auto const& weight_subs : weights) {
             auto subs{weight_subs.second};
             if (subs.size() != 1) {
-                correct_total_weight = weight_subs.first;
+                correct_total_weight = weight_subs.first; // this is w1
                 continue;
             }
-            // subs contains single sub-program with the wrong total weight
-            // if the sub-towers are balanced, sub itself is wrong
+            // w2 case
             for (auto const& sub : subs) {
                 auto result{wrong_weight(sub)};
                 if (!result.is_balanced) {
@@ -166,13 +182,15 @@ public:
                 }
             }
         }
+
+        // Determine correct weight of the "wrong" program.
         auto correct_weight{
             programs_.at(wrong_program).weight()
             + correct_total_weight - total_weight(wrong_program)
         };
         return {false, wrong_program, correct_weight};
     }
-    SearchResult wrong_weight() { return wrong_weight(base()); }
+    BalanceResult wrong_weight() { return wrong_weight(base()); }
 
     Program::Name base() const { return base_; }
 
