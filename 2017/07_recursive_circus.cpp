@@ -210,7 +210,7 @@ int main()
     std::cout << "Program '" << name
               << "' is the base of the tower of programs.\n";
 
-    std::cout << "The total weight supported by '" << name
+    std::cout << "The total weight of the sub-tower starting from '" << name
               << "' is " << tower.total_weight(name) << ".\n";
 
     auto wrong{tower.wrong_weight(name)};
