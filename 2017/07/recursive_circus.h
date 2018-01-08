@@ -47,8 +47,8 @@ public:
     // given name has the wrong weight (i.e. causes a sub-tower to be
     // unbalanced), assuming that there is exactly one such program.
     struct BalanceResult {
-        bool is_balanced;
-        Program::Name name;
+        bool balanced;
+        Program::Name wrong_program;
         Program::Weight correct_weight;
     };
     BalanceResult wrong_weight(const Program::Name& name);

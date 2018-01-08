@@ -142,7 +142,7 @@ ProgramTower::BalanceResult ProgramTower::wrong_weight(const Program::Name& name
         // w2 case
         for (auto const& sub : subs) {
             auto result{wrong_weight(sub)};
-            if (!result.is_balanced) {
+            if (!result.balanced) {
                 return result;
             } else {
                 wrong_program = sub;
