@@ -33,6 +33,10 @@ public:
     // Map from name to program with that name.
     using NameMap = std::unordered_map<Program::Name, Program>;
 
+    struct NoBase : public std::runtime_error {
+        NoBase();
+    };
+
     ProgramTower() = default;
     ProgramTower(const NameMap& programs);
     ProgramTower(const std::vector<Program>& programs);
@@ -58,10 +62,12 @@ public:
     Program::Name base() const { return base_; }
 
 private:
-    // Map from program name to name of supporting program.
     using SupportMap = std::unordered_map<Program::Name, Program::Name>;
 
+    // Build a map from each program to the one it is supported by
+    // (will contain all programs except the base of the tower).
     static SupportMap build_support_map(const NameMap&);
+    // Find the base program (the one which is not supported by any other).
     static Program::Name find_base(const NameMap&, const SupportMap&);
 
     NameMap programs_;

@@ -48,7 +48,10 @@ std::istream& operator>>(std::istream& input, Program& prog)
 }
 
 
-// Return a map of which program is supported by which.
+ProgramTower::NoBase::NoBase()
+  : std::runtime_error("The base of the tower cannot be determined.")
+{}
+
 ProgramTower::SupportMap
 ProgramTower::build_support_map(const NameMap& programs)
 {
@@ -62,7 +65,6 @@ ProgramTower::build_support_map(const NameMap& programs)
     return result;
 }
 
-// Find the base program (the one which is not supported by any other).
 Program::Name
 ProgramTower::find_base(const NameMap& programs, const SupportMap& support)
 {
@@ -70,7 +72,7 @@ ProgramTower::find_base(const NameMap& programs, const SupportMap& support)
         auto name{name_prog.first};
         if (support.find(name) == std::end(support)) return name;
     }
-    throw std::runtime_error("No program is the base.");
+    throw NoBase{};
 }
 
 ProgramTower::ProgramTower(const NameMap& programs)
@@ -97,8 +99,6 @@ std::istream& operator>>(std::istream& input, ProgramTower& tower)
     return input;
 }
 
-// Return the total weight of the program with the given name, and all
-// sub-towers it is supporting.
 Program::Weight ProgramTower::total_weight(const Program::Name& name)
 {
     auto base{programs_.at(name)};
@@ -109,9 +109,6 @@ Program::Weight ProgramTower::total_weight(const Program::Name& name)
     return result;
 }
 
-// Determine which program in the tower supported by the program with the
-// given name has the wrong weight (i.e. causes a sub-tower to be unbalanced),
-// assuming that there is exactly one such program.
 ProgramTower::BalanceResult
 ProgramTower::check_balance(const Program::Name& name)
 {
@@ -121,45 +118,40 @@ ProgramTower::check_balance(const Program::Name& name)
         weights[total_weight(sub)].push_back(sub);
     }
 
-    // One unique weight or no supported programs
+    // All sub-towers have the same weight or there are no sub-towers.
     // -> This tower is balanced, no program in it has the wrong weight.
     if (weights.size() <= 1) {
         return {true, "", 0};
     }
 
-    // Not all supported sub-towers have the same total weight
-    // -> One of the programs in the sub-towers has the wrong weight (given
-    //    the problem statement we can assume that there is exactly one such
-    //    program).
-    //
-    // -> For N sub-towers,
-    //    N-1 sub-towers have total weight w1 (which is "correct")
-    //    and 1 sub-tower has total weight w2 (which is "wrong")
-    //
-    // If the "wrong" sub-tower itself is balanced, then its base program
-    // must be the one with the wrong weight. Otherwise it is obtained by
-    // recursion.
-    int correct_total_weight;
-    Program::Name wrong_program;
+    // Not all supported sub-towers have the same total weight.
+    // According to the problem description we can assume that there is exactly
+    // one sub-tower that has a different weight than all the others, and that
+    // this is caused by exactly one program with the wrong weight.
+    int correct_total_weight{0};
+    Program::Name wrong_program{""};
 
     for (auto const& weight_subs : weights) {
         auto subs{weight_subs.second};
         if (subs.size() != 1) {
-            correct_total_weight = weight_subs.first; // this is w1
+            // Found the "correct" total weight of all but one sub-tower.
+            correct_total_weight = weight_subs.first;
             continue;
         }
-        // w2 case
+        // The one sub-tower with the wrong total weight.
         for (auto const& sub : subs) {
             auto result{check_balance(sub)};
             if (result.balanced) {
+                // The sub-tower is balanced, its base is the wrong program.
                 wrong_program = sub;
                 continue;
             }
+            // The sub-tower is not balanced, the wrong program is further up.
             return result;
         }
     }
 
-    // Determine correct weight of the "wrong" program.
+    // Determine the correct weight of the "wrong" program.
     auto correct_weight{
         programs_.at(wrong_program).weight()
         + correct_total_weight - total_weight(wrong_program)

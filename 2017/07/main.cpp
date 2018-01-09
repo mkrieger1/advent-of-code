@@ -1,3 +1,5 @@
+// Solution for Advent of Code 2017, Day 7, Parts 1 & 2.
+
 #include "recursive_circus.h"
 #include <iostream>
 
