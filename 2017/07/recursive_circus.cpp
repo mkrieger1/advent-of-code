@@ -48,20 +48,6 @@ std::istream& operator>>(std::istream& input, Program& prog)
 }
 
 
-ProgramTower::ProgramTower(const NameMap& programs)
-  : programs_{programs},
-    support_{build_support_map(programs_)},
-    base_{find_base(programs_, support_)}
-{}
-
-ProgramTower::ProgramTower(const std::vector<Program>& programs)
-{
-    NameMap map;
-    for (auto const& prog : programs) map.insert({prog.name(), prog});
-    ProgramTower dummy{map};
-    std::swap(*this, dummy);
-}
-
 // Return a map of which program is supported by which.
 ProgramTower::SupportMap
 ProgramTower::build_support_map(const NameMap& programs)
@@ -85,6 +71,20 @@ ProgramTower::find_base(const NameMap& programs, const SupportMap& support)
         if (support.find(name) == std::end(support)) return name;
     }
     throw std::runtime_error("No program is the base.");
+}
+
+ProgramTower::ProgramTower(const NameMap& programs)
+  : programs_{programs},
+    support_{build_support_map(programs_)},
+    base_{find_base(programs_, support_)}
+{}
+
+ProgramTower::ProgramTower(const std::vector<Program>& programs)
+{
+    NameMap map;
+    for (auto const& prog : programs) map.insert({prog.name(), prog});
+    ProgramTower dummy{map};
+    std::swap(*this, dummy);
 }
 
 std::istream& operator>>(std::istream& input, ProgramTower& tower)
