@@ -114,9 +114,14 @@ Program::Weight ProgramTower::total_weight(const Program::Name& name)
 // assuming that there is exactly one such program.
 ProgramTower::BalanceResult ProgramTower::wrong_weight(const Program::Name& name)
 {
+    auto supported{programs_.at(name).supported()};
+    if (!supported.size()) {
+        return {true, "", 0};
+    }
+
     // Map from weight to list of supported sub-towers with that weight.
     std::unordered_map<Program::Weight, std::vector<Program::Name>> weights;
-    for (auto const& sub : programs_.at(name).supported()) {
+    for (auto const& sub : supported) {
         weights[total_weight(sub)].push_back(sub);
     }
 

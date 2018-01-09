@@ -53,7 +53,7 @@ const std::vector<ProgramTowerTest> program_tower_tests {
      "tknk", 778, false, "ugml", 60},
 
     {{{"a", 3, {}}
-     }, "a", 3, true, "", 0} // BUG -> out_of_range is thrown
+     }, "a", 3, true, "", 0}
 };
 
 void test_program_tower()
