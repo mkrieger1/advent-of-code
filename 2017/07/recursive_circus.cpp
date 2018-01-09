@@ -156,12 +156,11 @@ ProgramTower::check_balance(const Program::Name& name)
         // w2 case
         for (auto const& sub : subs) {
             auto result{check_balance(sub)};
-            if (!result.balanced) {
-                return result;
-            } else {
+            if (result.balanced) {
                 wrong_program = sub;
                 continue;
             }
+            return result;
         }
     }
 
