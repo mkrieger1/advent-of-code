@@ -112,7 +112,8 @@ Program::Weight ProgramTower::total_weight(const Program::Name& name)
 // Determine which program in the tower supported by the program with the
 // given name has the wrong weight (i.e. causes a sub-tower to be unbalanced),
 // assuming that there is exactly one such program.
-ProgramTower::BalanceResult ProgramTower::wrong_weight(const Program::Name& name)
+ProgramTower::BalanceResult
+ProgramTower::check_balance(const Program::Name& name)
 {
     auto supported{programs_.at(name).supported()};
     if (!supported.size()) {
@@ -154,7 +155,7 @@ ProgramTower::BalanceResult ProgramTower::wrong_weight(const Program::Name& name
         }
         // w2 case
         for (auto const& sub : subs) {
-            auto result{wrong_weight(sub)};
+            auto result{check_balance(sub)};
             if (!result.balanced) {
                 return result;
             } else {

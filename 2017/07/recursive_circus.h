@@ -52,8 +52,8 @@ public:
         Program::Name wrong_program;
         Program::Weight correct_weight;
     };
-    BalanceResult wrong_weight(const Program::Name& name);
-    BalanceResult wrong_weight() { return wrong_weight(base()); }
+    BalanceResult check_balance(const Program::Name& name);
+    BalanceResult check_balance() { return check_balance(base()); }
 
     Program::Name base() const { return base_; }
 

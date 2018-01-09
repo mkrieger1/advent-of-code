@@ -64,7 +64,7 @@ void test_program_tower()
         assert(tower.base() == test.base);
         assert(tower.total_weight() == test.total_weight);
 
-        ProgramTower::BalanceResult b{tower.wrong_weight()};
+        ProgramTower::BalanceResult b{tower.check_balance()};
         assert(b.balanced == test.balanced);
         assert(b.wrong_program == test.wrong_program);
         assert(b.correct_weight == test.correct_weight);

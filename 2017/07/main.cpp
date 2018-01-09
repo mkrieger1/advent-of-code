@@ -13,13 +13,13 @@ int main()
     std::cout << "The total weight of the sub-tower starting from '" << name
               << "' is " << tower.total_weight(name) << ".\n";
 
-    auto wrong{tower.wrong_weight(name)};
+    auto balance{tower.check_balance(name)};
     std::cout << "The sub-tower supported by '" << name << "' is "
-              << (wrong.is_balanced ? "" : "not ")
+              << (balance.balanced ? "" : "not ")
               << "balanced.\n";
 
-    std::cout << "Program '" << wrong.name << "' has the wrong weight.\n";
+    std::cout << "Program '" << balance.wrong_program << "' has the wrong weight.\n";
 
     std::cout << "Its weight would need to be "
-              << wrong.correct_weight << ".\n";
+              << balance.correct_weight << ".\n";
 }
