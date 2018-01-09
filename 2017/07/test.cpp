@@ -11,8 +11,10 @@ struct ProgramInputTest {
 };
 
 const std::vector<ProgramInputTest> program_input_tests {
-    {"asdf (3)",              "asdf", 3, {}},
-    {"asdf (3) -> qwer, uio", "asdf", 3, {"qwer", "uio"}},
+    {"a (1)",                         "a",     1, {}},
+    {"a (2) -> b",                    "a",     2, {"b"}},
+    {"pbga (66)",                     "pbga", 66, {}},
+    {"fwft (72) -> ktlj, cntj, xhth", "fwft", 72, {"ktlj", "cntj", "xhth"}}
 };
 
 void test_program_input()
@@ -36,6 +38,23 @@ struct ProgramTowerTest {
 };
 
 const std::vector<ProgramTowerTest> program_tower_tests {
+    {{{"a", 3, {}}
+     },
+     "a", 3, true, "", 0},
+
+    {{{"a", 3, {"b", "c"}},
+      {"b", 1, {}},
+      {"c", 1, {}}
+     },
+     "a", 5, true, "", 0},
+
+    {{{"a", 3, {"b", "c", "d"}},
+      {"b", 1, {}},
+      {"c", 2, {}},
+      {"d", 2, {}}
+     },
+     "a", 8, false, "b", 2},
+
     {{{"pbga", 66, {}},
       {"xhth", 57, {}},
       {"ebii", 61, {}},
@@ -51,9 +70,6 @@ const std::vector<ProgramTowerTest> program_tower_tests {
       {"cntj", 57, {}}
      },
      "tknk", 778, false, "ugml", 60},
-
-    {{{"a", 3, {}}
-     }, "a", 3, true, "", 0}
 };
 
 void test_program_tower()
