@@ -1,6 +1,6 @@
 #include "recursive_circus.h"
 #include <cassert>
-#include <sstream>
+#include <string>
 #include <vector>
 
 struct ProgramInputTest {
@@ -27,7 +27,7 @@ void test_program_input()
 
 
 struct ProgramTowerTest {
-    std::string programs_input;
+    std::vector<Program> programs;
     Program::Name base;
     Program::Weight total_weight;
     bool balanced;
@@ -36,17 +36,30 @@ struct ProgramTowerTest {
 };
 
 const std::vector<ProgramTowerTest> program_tower_tests {
-    {R"(a (3)
-     )",
-    "a", 3, true, "", 0} // BUG -> out_of_range is thrown
+    {{{"pbga", 66, {}},
+      {"xhth", 57, {}},
+      {"ebii", 61, {}},
+      {"havc", 66, {}},
+      {"ktlj", 57, {}},
+      {"fwft", 72, {"ktlj", "cntj", "xhth"}},
+      {"qoyq", 66, {}},
+      {"padx", 45, {"pbga", "havc", "qoyq"}},
+      {"tknk", 41, {"ugml", "padx", "fwft"}},
+      {"jptl", 61, {}},
+      {"ugml", 68, {"gyxo", "ebii", "jptl"}},
+      {"gyxo", 61, {}},
+      {"cntj", 57, {}}
+     },
+     "tknk", 778, false, "ugml", 60},
+
+    {{{"a", 3, {}}
+     }, "a", 3, true, "", 0} // BUG -> out_of_range is thrown
 };
 
 void test_program_tower()
 {
     for (auto const& test : program_tower_tests) {
-        std::stringstream stream{test.programs_input};
-        ProgramTower tower;
-        stream >> tower;
+        ProgramTower tower{test.programs};
 
         assert(tower.base() == test.base);
         assert(tower.total_weight() == test.total_weight);

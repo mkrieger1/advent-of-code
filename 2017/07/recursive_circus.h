@@ -35,6 +35,7 @@ public:
 
     ProgramTower() = default;
     ProgramTower(const NameMap& programs);
+    ProgramTower(const std::vector<Program>& programs);
 
     friend std::istream& operator>>(std::istream& input, ProgramTower& tower);
 
