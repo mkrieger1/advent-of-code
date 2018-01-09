@@ -7,21 +7,22 @@ int main()
 {
     ProgramTower tower;
     std::cin >> tower;
-    auto name{tower.base()};
 
-    std::cout << "Program '" << name
+    std::cout << "Program '" << tower.base()
               << "' is the base of the tower of programs.\n";
 
-    std::cout << "The total weight of the sub-tower starting from '" << name
-              << "' is " << tower.total_weight(name) << ".\n";
+    std::cout << "The total weight of the tower is "
+              << tower.total_weight() << ".\n";
 
-    auto balance{tower.check_balance(name)};
-    std::cout << "The sub-tower supported by '" << name << "' is "
-              << (balance.balanced ? "" : "not ")
-              << "balanced.\n";
+    auto balance{tower.check_balance()};
+    std::cout << "The tower is "
+              << (balance.balanced ? "" : "not ") << "balanced.\n";
 
-    std::cout << "Program '" << balance.wrong_program << "' has the wrong weight.\n";
+    if (!balance.balanced) {
+        std::cout << "Program '" << balance.wrong_program
+                  << "' has the wrong weight.\n";
 
-    std::cout << "Its weight would need to be "
-              << balance.correct_weight << ".\n";
+        std::cout << "Its weight would need to be "
+                  << balance.correct_weight << ".\n";
+    }
 }
