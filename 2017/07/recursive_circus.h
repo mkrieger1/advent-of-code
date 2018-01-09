@@ -45,8 +45,8 @@ public:
 
     // Return the total weight of the program with the given name, and all
     // sub-towers it is supporting.
-    Program::Weight total_weight(const Program::Name& name);
-    Program::Weight total_weight() { return total_weight(base()); }
+    Program::Weight total_weight(const Program::Name& name) const;
+    Program::Weight total_weight() const { return total_weight(base()); }
 
     // Determine which program in the tower supported by the program with the
     // given name has the wrong weight (i.e. causes a sub-tower to be
@@ -56,8 +56,8 @@ public:
         Program::Name wrong_program;
         Program::Weight correct_weight;
     };
-    BalanceResult check_balance(const Program::Name& name);
-    BalanceResult check_balance() { return check_balance(base()); }
+    BalanceResult check_balance(const Program::Name& name) const;
+    BalanceResult check_balance() const { return check_balance(base()); }
 
     Program::Name base() const { return base_; }
 

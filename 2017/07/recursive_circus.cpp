@@ -99,7 +99,7 @@ std::istream& operator>>(std::istream& input, ProgramTower& tower)
     return input;
 }
 
-Program::Weight ProgramTower::total_weight(const Program::Name& name)
+Program::Weight ProgramTower::total_weight(const Program::Name& name) const
 {
     auto base{programs_.at(name)};
     Program::Weight result{base.weight()};
@@ -110,7 +110,7 @@ Program::Weight ProgramTower::total_weight(const Program::Name& name)
 }
 
 ProgramTower::BalanceResult
-ProgramTower::check_balance(const Program::Name& name)
+ProgramTower::check_balance(const Program::Name& name) const
 {
     // Map from weight to list of supported sub-towers with that weight.
     std::unordered_map<Program::Weight, std::vector<Program::Name>> weights;
