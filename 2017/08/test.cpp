@@ -2,7 +2,7 @@
 #include <cassert>
 #include <vector>
 
-void run_tests()
+void run_simple_example()
 {
     RegisterMachine machine{};
     assert(machine.max_register_value() == 0);
@@ -21,5 +21,5 @@ void run_tests()
 
 int main()
 {
-    run_tests();
+    run_simple_example();
 }
