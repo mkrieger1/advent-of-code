@@ -48,9 +48,10 @@ public:
     Program::Weight total_weight(const Program::Name& name) const;
     Program::Weight total_weight() const { return total_weight(base()); }
 
-    // Determine which program in the tower supported by the program with the
-    // given name has the wrong weight (i.e. causes a sub-tower to be
-    // unbalanced), assuming that there is exactly one such program.
+    // Determine whether the tower supported by the program with the given name
+    // is balanced, and if not, which program in it has the wrong weight
+    // (i.e. causes a sub-tower to be unbalanced), and what its correct weight
+    // would be, assuming that there is only one such program.
     struct BalanceResult {
         bool balanced;
         Program::Name wrong_program;

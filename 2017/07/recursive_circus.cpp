@@ -1,4 +1,5 @@
 #include "recursive_circus.h"
+#include <cassert>
 #include <regex>
 
 Program::InvalidFormat::InvalidFormat()
@@ -139,16 +140,16 @@ ProgramTower::check_balance(const Program::Name& name) const
             continue;
         }
         // The one sub-tower with the wrong total weight.
-        for (auto const& sub : subs) {
-            auto result{check_balance(sub)};
-            if (result.balanced) {
-                // The sub-tower is balanced, its base is the wrong program.
-                wrong_program = sub;
-                continue;
-            }
-            // The sub-tower is not balanced, the wrong program is further up.
-            return result;
+        assert(subs.size() == 1);
+        auto const& sub{subs[0]};
+        auto result{check_balance(sub)};
+        if (result.balanced) {
+            // The sub-tower is balanced, its base is the wrong program.
+            wrong_program = sub;
+            continue;
         }
+        // The sub-tower is not balanced, the wrong program is further up.
+        return result;
     }
 
     // Determine the correct weight of the "wrong" program.
