@@ -141,7 +141,7 @@ ProgramTower::check_balance(const Program::Name& name) const
         }
         // The one sub-tower with the wrong total weight.
         assert(subs.size() == 1);
-        auto const& sub{subs[0]};
+        const Program::Name& sub{subs[0]};
         auto result{check_balance(sub)};
         if (result.balanced) {
             // The sub-tower is balanced, its base is the wrong program.
