@@ -33,8 +33,10 @@ public:
     };
 
     void execute(const Instruction&);
-    RegisterValue max_register_value() const;
+    RegisterValue max_value() const;
+    RegisterValue max_all_time_value() const { return all_time_max_; };
 
 private:
+    RegisterValue all_time_max_{0};
     std::unordered_map<RegisterName, RegisterValue> registers_;
 };

@@ -66,7 +66,7 @@ std::istream& operator>>(std::istream& input, Machine::Instruction i)
     return input;
 }
 
-Machine::RegisterValue Machine::max_register_value() const
+Machine::RegisterValue Machine::max_value() const
 {
     // TODO make smarter
     RegisterValue current_max{0};
@@ -81,13 +81,15 @@ void Machine::execute(const Instruction& i)
 {
     RegisterValue src{registers_[i.source]};
     if (Instruction::evaluate(i.comparison, src, i.compare_value)) {
+        RegisterValue& target{registers_[i.target]};
         switch (i.operation) {
         case Instruction::Operation::Inc:
-            registers_[i.target] += i.operation_amount;
+            target += i.operation_amount;
             break;
         case Instruction::Operation::Dec:
-            registers_[i.target] -= i.operation_amount;
+            target -= i.operation_amount;
             break;
         }
+        if (target > all_time_max_) all_time_max_ = target;
     }
 }
