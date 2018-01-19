@@ -1,4 +1,5 @@
 #include "machine.h"
+#include <algorithm>
 #include <regex>
 #include <sstream>
 #include <string>
@@ -77,13 +78,10 @@ std::istream& operator>>(std::istream& input, Machine::Instruction& i)
 
 Machine::RegisterValue Machine::max_value() const
 {
-    // TODO make smarter
-    RegisterValue current_max{0};
-    for (auto const& name_value : registers_) {
-        auto value{name_value.second};
-        if (value > current_max) current_max = value;
-    }
-    return current_max;
+    if (!registers_.size()) return 0;
+    return std::max_element(std::begin(registers_), std::end(registers_),
+        [](auto const& a, auto const& b) { return a.second < b.second; }
+    )->second;
 }
 
 void Machine::execute(const Instruction& i)
