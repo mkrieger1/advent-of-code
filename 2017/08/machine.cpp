@@ -51,7 +51,7 @@ Machine::Instruction::Instruction(const std::string& line)
     compare_value = stoi(line_match[6]);
 }
 
-std::istream& operator>>(std::istream& input, Machine::Instruction i)
+std::istream& operator>>(std::istream& input, Machine::Instruction& i)
 {
     std::string line;
     while (std::getline(input, line)) {

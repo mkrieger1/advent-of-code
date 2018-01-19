@@ -21,8 +21,9 @@ public:
         // evaluate "a <cmp> b"
         static bool evaluate(Comparison cmp, RegisterValue a, RegisterValue b);
 
+        Instruction() = default;
         Instruction(const std::string& line);
-        friend std::istream& operator>>(std::istream&, Instruction);
+        friend std::istream& operator>>(std::istream&, Instruction&);
 
         RegisterName target;
         Operation operation;

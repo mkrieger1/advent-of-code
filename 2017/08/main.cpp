@@ -4,9 +4,8 @@
 int main()
 {
     Machine m;
-    std::string line;
-    while (std::getline(std::cin, line)) {
-        Machine::Instruction i{line};
+    Machine::Instruction i;
+    while (std::cin >> i) {
         m.execute(i);
     }
     std::cout << m.max_value() << '\n';
