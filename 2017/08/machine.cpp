@@ -91,11 +91,9 @@ void Machine::execute(const Instruction& i)
         RegisterValue& target{registers_[i.target]};
         switch (i.operation) {
         case Instruction::Operation::Inc:
-            target += i.operation_amount;
-            break;
+            target += i.operation_amount; break;
         case Instruction::Operation::Dec:
-            target -= i.operation_amount;
-            break;
+            target -= i.operation_amount; break;
         }
         if (target > all_time_max_) all_time_max_ = target;
     }
