@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include <string>
 #include <unordered_map>
 
@@ -13,6 +14,10 @@ public:
             Equal, Unequal,
             Less, LessEqual,
             Greater, GreaterEqual
+        };
+
+        struct ParseError : public std::runtime_error {
+            ParseError(const std::string& what_arg);
         };
 
         static Operation to_operation(const std::string&);

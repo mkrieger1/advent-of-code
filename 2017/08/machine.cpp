@@ -1,14 +1,21 @@
 #include "machine.h"
 #include <regex>
-#include <stdexcept>
+#include <sstream>
 #include <string>
+
+Machine::Instruction::ParseError::ParseError(const std::string& what_arg)
+  : std::runtime_error{what_arg}
+{}
 
 Machine::Instruction::Operation
 Machine::Instruction::to_operation(const std::string& s)
 {
     if (s == "inc") return Operation::Inc;
     if (s == "dec") return Operation::Dec;
-    throw std::runtime_error("Unknown operation.");
+
+    std::stringstream error;
+    error << "Unknown operation: " << s;
+    throw ParseError{error.str()};
 }
 
 Machine::Instruction::Comparison
@@ -20,7 +27,10 @@ Machine::Instruction::to_comparison(const std::string& s)
     if (s == "<=") return Comparison::LessEqual;
     if (s == ">" ) return Comparison::Greater;
     if (s == ">=") return Comparison::GreaterEqual;
-    throw std::runtime_error("Unknown comparison.");
+
+    std::stringstream error;
+    error << "Unknown comparison: " << s;
+    throw ParseError{error.str()};
 }
 
 bool Machine::Instruction::evaluate(
@@ -41,7 +51,11 @@ Machine::Instruction::Instruction(const std::string& line)
     std::smatch line_match;
     if (!std::regex_match(line, line_match,
         std::regex{R"((\w+) (\w+) ([+-]?\d+) if (\w+) (\W+) ([+-]?\d+))"}
-    )) throw std::runtime_error{"Invalid format."};
+    )) {
+        std::stringstream error;
+        error << "Invalid format: " << line;
+        throw ParseError{error.str()};
+    }
 
     target = line_match[1];
     operation = to_operation(line_match[2]);
@@ -54,14 +68,9 @@ Machine::Instruction::Instruction(const std::string& line)
 std::istream& operator>>(std::istream& input, Machine::Instruction& i)
 {
     std::string line;
-    while (std::getline(input, line)) {
-        //try {
-            Machine::Instruction dummy{line};
-            std::swap(i, dummy);
-            break;
-        //} catch (std::runtime_error) {
-        //    continue; // TODO use custom exception, abort program
-        //}
+    if (std::getline(input, line)) {
+        Machine::Instruction dummy{line};
+        std::swap(i, dummy);
     }
     return input;
 }
