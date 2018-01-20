@@ -4,8 +4,8 @@
 
 class Machine {
 public:
-    using RegisterValue = int;
     using RegisterName = std::string;
+    using RegisterValue = int;
 
     struct Instruction {
         enum class Operation { Inc, Dec };
