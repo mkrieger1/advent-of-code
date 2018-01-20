@@ -40,7 +40,7 @@ public:
 
     void execute(const Instruction&);
     RegisterValue max_value() const;
-    RegisterValue all_time_max_value() const { return all_time_max_; };
+    RegisterValue all_time_max_value() const { return all_time_max_; }
 
 private:
     RegisterValue all_time_max_{0};
