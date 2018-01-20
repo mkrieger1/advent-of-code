@@ -11,5 +11,5 @@ int main()
         std::cerr << e.what() << '\n';
     }
     std::cout << m.max_value() << '\n';
-    std::cout << m.max_all_time_value() << '\n';
+    std::cout << m.all_time_max_value() << '\n';
 }
