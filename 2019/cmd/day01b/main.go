@@ -12,5 +12,5 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(aoc2019.FuelForModulesAlone(modules))
+	fmt.Println(aoc2019.FuelForModulesIncludingFuel(modules))
 }

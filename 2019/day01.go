@@ -1,20 +1,48 @@
 package aoc2019
 
-// fuelToLaunchModule calculates the fuel required to launch a module.
-// (Fuel required to launch a given module is based on its mass.
-// Specifically, to find the fuel required for a module, take its mass,
-// divide by three, round down, and subtract 2.)
-func fuelToLaunchModule(mass int) int {
-	return mass/3 - 2
+// fuelToLaunchMass calculates the fuel required to launch a mass.
+func fuelToLaunchMass(mass int) int {
+	f := mass/3 - 2
+	if f < 0 {
+		return 0
+	}
+	return f
 }
 
-// FuelToLaunchModules calculates the total fuel requirement.
-// (Individually calculate the fuel needed for the mass of each module
-// (your puzzle input), then add together all the fuel values.)
-func FuelToLaunchModules(masses []int) (int, error) {
+// fuelToLaunchModuleWithFuel calculates the fuel required to launch a
+// module, including the fuel required to launch the fuel itself.
+func fuelToLaunchMassWithFuel(mass int) int {
 	total := 0
-	for _, mass := range masses {
-		total += fuelToLaunchModule(mass)
+	add := fuelToLaunchMass(mass)
+	for add > 0 {
+		total += add
+		add = fuelToLaunchMass(add)
 	}
-	return total, nil
+	return total
+}
+
+// FuelForModulesAlone calculates the fuel required to launch the modules,
+// without taking the fuel required to launch the fuel itself into account.
+func FuelForModulesAlone(modules []int) int {
+	total := 0
+	for _, module := range modules {
+		total += fuelToLaunchMass(module)
+	}
+	return total
+}
+
+/*
+MK: Why is the result different between
+- (fuel for module + additional fuel) for each module (-> 5120654)
+- (fuel for each module) + additional fuel            (-> 5123500)?
+*/
+
+// FuelForModulesIncludingFuel calculates the fuel required to launch the
+// modules, including the fuel required to launch the fuel itself.
+func FuelForModulesIncludingFuel(modules []int) int {
+	total := 0
+	for _, module := range modules {
+		total += fuelToLaunchMassWithFuel(module)
+	}
+	return total
 }
