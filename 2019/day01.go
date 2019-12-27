@@ -1,9 +1,5 @@
 package aoc2019
 
-import (
-	"io"
-)
-
 // fuelToLaunchModule calculates the fuel required to launch a module.
 // (Fuel required to launch a given module is based on its mass.
 // Specifically, to find the fuel required for a module, take its mass,
@@ -12,13 +8,12 @@ func fuelToLaunchModule(mass int) int {
 	return mass/3 - 2
 }
 
-func FuelToLaunchModules(r io.Reader) (int, error) {
-	masses, err := ReadInts(r)
-	if err != nil {
-		return 0, err
-	}
+// FuelToLaunchModules calculates the total fuel requirement.
+// (Individually calculate the fuel needed for the mass of each module
+// (your puzzle input), then add together all the fuel values.)
+func FuelToLaunchModules(masses []int) (int, error) {
 	total := 0
-	for mass := range masses {
+	for _, mass := range masses {
 		total += fuelToLaunchModule(mass)
 	}
 	return total, nil

@@ -8,9 +8,13 @@ import (
 )
 
 func main() {
-	t, err := aoc2019.FuelToLaunchModules(os.Stdin)
+	masses, err := aoc2019.ReadInts(os.Stdin)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(t)
+	result, err := aoc2019.FuelToLaunchModules(masses)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(result)
 }

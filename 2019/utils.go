@@ -7,6 +7,7 @@ import (
 	"os"
 )
 
+// ReadInts converts all lines from the Reader to a slice of ints.
 func ReadInts(r io.Reader) ([]int, error) {
 	scanner := bufio.NewScanner(os.Stdin)
 	ints := []int{}
