@@ -1,16 +1,15 @@
-package aoc2019
+package util
 
 import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 )
 
-// ReadInts converts all lines from the Reader to a slice of ints.
-func ReadInts(r io.Reader) ([]int, error) {
-	scanner := bufio.NewScanner(os.Stdin)
+// ReadIntsFromLines converts all lines from r to a slice of ints.
+func ReadIntsFromLines(r io.Reader) ([]int, error) {
 	ints := []int{}
+	scanner := bufio.NewScanner(r)
 	var i int
 	for scanner.Scan() {
 		_, err := fmt.Sscanf(scanner.Text(), "%d", &i)
