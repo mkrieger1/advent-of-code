@@ -28,11 +28,42 @@ func runIntMachine(mem []int) (int, error) {
 	return mem[0], nil
 }
 
+func runIntMachineWithInput(mem []int, noun int, verb int) (int, error) {
+	mem[1] = noun
+	mem[2] = verb
+	return runIntMachine(mem)
+}
+
 // RestoreGravityAssist restores the gravity assist program to the
 // "1202 program alarm" state it had just before the last computer
 // caught fire and then runs the program.
 func RestoreGravityAssist(mem []int) (int, error) {
-	mem[1] = 12
-	mem[2] = 2
-	return runIntMachine(mem)
+	return runIntMachineWithInput(mem, 12, 2)
+}
+
+func findInputsBruteForce(mem []int, target int) (noun int, verb int, err error) {
+	memCopy := make([]int, len(mem)) // see https://stackoverflow.com/questions/30182538
+	for noun = 0; noun <= 99; noun++ {
+		for verb = 0; verb <= 99; verb++ {
+			copy(memCopy, mem)
+			result, err := runIntMachineWithInput(memCopy, noun, verb)
+			if err != nil {
+				return 0, 0, err
+			}
+			if result == target {
+				return noun, verb, nil
+			}
+		}
+	}
+	return 0, 0, fmt.Errorf("No inputs produced target %d", target)
+}
+
+// FindInputs finds the noun and verb producing the target result when
+// running the program in the memory and returns it as 100 * noun + verb.
+func FindInputs(mem []int, target int) (int, error) {
+	noun, verb, err := findInputsBruteForce(mem, target)
+	if err != nil {
+		return 0, err
+	}
+	return 100*noun + verb, nil
 }
