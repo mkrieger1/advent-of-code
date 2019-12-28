@@ -40,3 +40,21 @@ func ReadIntsFromLine(r io.Reader, sep string) ([]int, error) {
 	}
 	return ints, nil
 }
+
+// ReadSeparatedStringsFromLine reads a line and splits it to a sclice of strings.
+func ReadSeparatedStringsFromLine(r io.Reader, sep string) ([]string, error) {
+	reader := bufio.NewReader(r)
+	line, err := reader.ReadString('\n')
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(line, sep), nil
+}
+
+// Abs returns the absolute value of x.
+func Abs(x int) int {
+	if x < 0 {
+		return -x
+	}
+	return x
+}
