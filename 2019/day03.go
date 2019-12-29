@@ -95,54 +95,37 @@ func MostCentralCrossing(wires [2][]string) (int, error) {
 	best := -1
 	for _, seg1 := range segments[0] {
 		for _, seg2 := range segments[1] {
+			var vert, hor segment
 			if seg1.start.x == seg1.end.x { // segment1 vertical
 				if seg2.start.x == seg2.end.x {
 					continue // both vertical
 				}
-				vert, hor := seg1, seg2
-				x := vert.start.x
-				xa, xb := hor.start.x, hor.end.x
-				if (x < xa) || (x > xb) {
-					continue // no crossing
-				}
-				y := hor.start.y
-				ya, yb := vert.start.y, vert.end.y
-				if (y < ya) || (y > yb) {
-					continue // no crossing
-				}
-				// crossing at x, y
-				if (x == 0) && (y == 0) {
-					continue // doesn't count
-				}
-				dist := util.Abs(x) + util.Abs(y)
-				if (best == -1) || (dist < best) {
-					best = dist
-				}
+				vert, hor = seg1, seg2
 			} else if seg1.start.y == seg1.end.y { // segment1 horizontal
 				if seg2.start.y == seg2.end.y {
 					continue // both horizontal
 				}
-				vert, hor := seg2, seg1
-				x := vert.start.x
-				xa, xb := hor.start.x, hor.end.x
-				if (x < xa) || (x > xb) {
-					continue // no crossing
-				}
-				y := hor.start.y
-				ya, yb := vert.start.y, vert.end.y
-				if (y < ya) || (y > yb) {
-					continue // no crossing
-				}
-				// crossing at x, y
-				if (x == 0) && (y == 0) {
-					continue // doesn't count
-				}
-				dist := util.Abs(x) + util.Abs(y)
-				if (best == -1) || (dist < best) {
-					best = dist
-				}
+				vert, hor = seg2, seg1
 			} else {
 				return 0, fmt.Errorf("Segment not horizontal or vertical")
+			}
+			x := vert.start.x
+			xa, xb := hor.start.x, hor.end.x
+			if (x < xa) || (x > xb) {
+				continue // no crossing
+			}
+			y := hor.start.y
+			ya, yb := vert.start.y, vert.end.y
+			if (y < ya) || (y > yb) {
+				continue // no crossing
+			}
+			// crossing at x, y
+			if (x == 0) && (y == 0) {
+				continue // doesn't count
+			}
+			dist := util.Abs(x) + util.Abs(y)
+			if (best == -1) || (dist < best) {
+				best = dist
 			}
 		}
 	}
