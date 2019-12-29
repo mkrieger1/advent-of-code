@@ -51,25 +51,12 @@ func (seg segment) crosses(other segment) (*point, error) {
 	}
 
 	x := vert.start.x
-	var xlow, xhigh int
-	if hor.start.x < hor.end.x {
-		xlow, xhigh = hor.start.x, hor.end.x
-	} else {
-		xlow, xhigh = hor.end.x, hor.start.x
+	if !util.InRange(x, [2]int{hor.start.x, hor.end.x}) {
+		return nil, nil
 	}
-	if (x < xlow) || (x > xhigh) {
-		return nil, nil // no crossing
-	}
-
 	y := hor.start.y
-	var ylow, yhigh int
-	if vert.start.y < vert.end.y {
-		ylow, yhigh = vert.start.y, vert.end.y
-	} else {
-		ylow, yhigh = vert.end.y, vert.start.y
-	}
-	if (y < ylow) || (y > yhigh) {
-		return nil, nil // no crossing
+	if !util.InRange(y, [2]int{vert.start.y, vert.end.y}) {
+		return nil, nil
 	}
 	return &point{x, y}, nil
 }

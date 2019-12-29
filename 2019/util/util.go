@@ -58,3 +58,15 @@ func Abs(x int) int {
 	}
 	return x
 }
+
+// InRange determines whether x is in the range (inclusive).
+// It does not matter whether the range is ascending or descending.
+func InRange(x int, r [2]int) bool {
+	var low, high int
+	if r[0] < r[1] {
+		low, high = r[0], r[1]
+	} else {
+		low, high = r[1], r[0]
+	}
+	return (low <= x) && (x <= high)
+}
