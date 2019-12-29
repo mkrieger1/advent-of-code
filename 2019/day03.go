@@ -96,16 +96,17 @@ func MostCentralCrossing(wires [2][]string) (int, error) {
 	for _, seg1 := range segments[0] {
 		for _, seg2 := range segments[1] {
 			if seg1.start.x == seg1.end.x { // segment1 vertical
-				x := seg1.start.x
-				xa, xb := seg2.start.x, seg2.end.x
-				if xa == xb {
+				if seg2.start.x == seg2.end.x {
 					continue // both vertical
 				}
+				vert, hor := seg1, seg2
+				x := vert.start.x
+				xa, xb := hor.start.x, hor.end.x
 				if (x < xa) || (x > xb) {
 					continue // no crossing
 				}
-				y := seg2.start.y
-				ya, yb := seg1.start.y, seg1.end.y
+				y := hor.start.y
+				ya, yb := vert.start.y, vert.end.y
 				if (y < ya) || (y > yb) {
 					continue // no crossing
 				}
@@ -118,16 +119,17 @@ func MostCentralCrossing(wires [2][]string) (int, error) {
 					best = dist
 				}
 			} else if seg1.start.y == seg1.end.y { // segment1 horizontal
-				y := seg1.start.y
-				ya, yb := seg2.start.y, seg2.end.y
-				if ya == yb {
+				if seg2.start.y == seg2.end.y {
 					continue // both horizontal
 				}
+				vert, hor := seg2, seg1
+				y := hor.start.y
+				ya, yb := vert.start.y, vert.end.y
 				if (y < ya) || (y > yb) {
 					continue // no crossing
 				}
-				x := seg2.start.x
-				xa, xb := seg1.start.x, seg1.end.x
+				x := vert.start.x
+				xa, xb := hor.start.x, hor.end.x
 				if (x < xa) || (x > xb) {
 					continue // no crossing
 				}
