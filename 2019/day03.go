@@ -113,6 +113,28 @@ func parseSegments(descriptions []string) ([]segment, error) {
 	return segments, nil
 }
 
+// allCrossings returns all points where the two wires cross,
+// excluding the origin.
+func allCrossings(wire1, wire2 []segment) ([]point, error) {
+	crossings := []point{}
+	for _, seg1 := range wire1 {
+		for _, seg2 := range wire2 {
+			crossing, err := seg1.crosses(seg2)
+			if err != nil {
+				return nil, err
+			}
+			if crossing == nil {
+				continue
+			}
+			if (crossing.x == 0) && (crossing.y == 0) {
+				continue
+			}
+			crossings = append(crossings, *crossing)
+		}
+	}
+	return crossings, nil
+}
+
 // MostCentralCrossing returns the Manhattan distance of the crossing
 // of the two wires closest to the center.
 func MostCentralCrossing(wires [2][]string) (int, error) {
@@ -125,27 +147,19 @@ func MostCentralCrossing(wires [2][]string) (int, error) {
 		}
 	}
 
-	best := -1
-	for _, seg1 := range segments[0] {
-		for _, seg2 := range segments[1] {
-			crossing, err := seg1.crosses(seg2)
-			if err != nil {
-				return 0, err
-			}
-			if crossing == nil {
-				continue
-			}
-			if (crossing.x == 0) && (crossing.y == 0) {
-				continue // doesn't count
-			}
-			dist := crossing.manhattanDistance()
-			if (best == -1) || (dist < best) {
-				best = dist
-			}
-		}
+	crossings, err := allCrossings(segments[0], segments[1])
+	if err != nil {
+		return 0, err
 	}
-	if best == -1 {
+	if len(crossings) == 0 {
 		return 0, fmt.Errorf("No crossing found")
+	}
+	best := crossings[0].manhattanDistance()
+	for _, crossing := range crossings[1:] {
+		dist := crossing.manhattanDistance()
+		if dist < best {
+			best = dist
+		}
 	}
 	return best, nil
 }
