@@ -14,6 +14,20 @@ const (
 	right
 )
 
+// point is an x, y coordinate.
+type point struct {
+	x int
+	y int
+}
+
+// segment is a wire between to points.
+type segment struct {
+	start  point
+	end    point
+	dir    direction
+	length int
+}
+
 // parseSegment converts a string description of a wire segment
 // to its direction and length.
 func parseSegment(seg string) (direction, int, error) {
@@ -39,95 +53,92 @@ func parseSegment(seg string) (direction, int, error) {
 	return dir, length, nil
 }
 
-// pointsFromSegments converts a slice of string descriptions of wire segments
-// to a slice of (x, y) coordinates.
-func pointsFromSegments(segments []string) ([][2]int, error) {
-	points := [][2]int{}
-	x, y := 0, 0
-	for _, seg := range segments {
-		dir, length, err := parseSegment(seg)
+// parseSegments converts a slice of string descriptions of wire segments
+// to a slice of segments.
+func parseSegments(descriptions []string) ([]segment, error) {
+	segments := []segment{}
+	pos := point{0, 0}
+	prev := pos
+	for _, desc := range descriptions {
+		dir, length, err := parseSegment(desc)
 		if err != nil {
 			return nil, err
 		}
 		switch dir {
 		case up:
-			y += length
+			pos.y += length
 		case down:
-			y -= length
+			pos.y -= length
 		case left:
-			x -= length
+			pos.x -= length
 		case right:
-			x += length
+			pos.x += length
 		}
-		points = append(points, [2]int{x, y})
+		segments = append(segments, segment{prev, pos, dir, length})
+		prev = pos
 	}
-	return points, nil
+	return segments, nil
 }
 
 // MostCentralCrossing returns the Manhattan distance of the crossing
 // of the two wires closest to the center.
 func MostCentralCrossing(wires [2][]string) (int, error) {
 	var err error
-	var points [2][][2]int
-	for i, segments := range wires {
-		points[i], err = pointsFromSegments(segments)
+	var segments [2][]segment
+	for i := range wires {
+		segments[i], err = parseSegments(wires[i])
 		if err != nil {
 			return 0, err
 		}
 	}
-	points1, points2 := points[0], points[1]
-	best := -1
 
-	for i := range points[0] {
-		if i == 0 {
-			continue
-		}
-		for j := range points[1] {
-			if j == 0 {
-				continue
-			}
-			start1, end1 := points1[i-1], points1[i]
-			start2, end2 := points2[j-1], points2[j]
-			if start1[0] == end1[0] { // segment1 vertical
-				x := start1[0]
-				xa, xb := start2[0], end2[0]
-				if xa == xb {
+	best := -1
+	for _, seg1 := range segments[0] {
+		for _, seg2 := range segments[1] {
+			var vert, hor segment
+			if seg1.start.x == seg1.end.x { // segment1 vertical
+				if seg2.start.x == seg2.end.x {
 					continue // both vertical
 				}
-				if (x < xa) || (x > xb) {
-					continue // no crossing
-				}
-				y := start2[1]
-				ya, yb := start1[1], end1[1]
-				if (y < ya) || (y > yb) {
-					continue // no crossing
-				}
-				// crossing at x, y
-				dist := util.Abs(x) + util.Abs(y)
-				if (best == -1) || (dist < best) {
-					best = dist
-				}
-			} else if start1[1] == end1[1] { // segment1 horizontal
-				y := start1[1]
-				ya, yb := start2[1], end2[1]
-				if ya == yb {
+				vert, hor = seg1, seg2
+			} else if seg1.start.y == seg1.end.y { // segment1 horizontal
+				if seg2.start.y == seg2.end.y {
 					continue // both horizontal
 				}
-				if (y < ya) || (y > yb) {
-					continue // no crossing
-				}
-				x := start2[0]
-				xa, xb := start1[0], end1[0]
-				if (x < xa) || (x > xb) {
-					continue // no crossing
-				}
-				// crossing at x, y
-				dist := util.Abs(x) + util.Abs(y)
-				if (best == -1) || (dist < best) {
-					best = dist
-				}
+				vert, hor = seg2, seg1
 			} else {
 				return 0, fmt.Errorf("Segment not horizontal or vertical")
+			}
+
+			x := vert.start.x
+			var xlow, xhigh int
+			if hor.start.x < hor.end.x {
+				xlow, xhigh = hor.start.x, hor.end.x
+			} else {
+				xlow, xhigh = hor.end.x, hor.start.x
+			}
+			if (x < xlow) || (x > xhigh) {
+				continue // no crossing
+			}
+
+			y := hor.start.y
+			var ylow, yhigh int
+			if vert.start.y < vert.end.y {
+				ylow, yhigh = vert.start.y, vert.end.y
+			} else {
+				ylow, yhigh = vert.end.y, vert.start.y
+			}
+			if (y < ylow) || (y > yhigh) {
+				continue // no crossing
+			}
+
+			// crossing at x, y
+			if (x == 0) && (y == 0) {
+				continue // doesn't count
+			}
+			dist := util.Abs(x) + util.Abs(y)
+			if (best == -1) || (dist < best) {
+				best = dist
 			}
 		}
 	}
