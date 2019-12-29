@@ -123,14 +123,14 @@ func MostCentralCrossing(wires [2][]string) (int, error) {
 					continue // both horizontal
 				}
 				vert, hor := seg2, seg1
-				y := hor.start.y
-				ya, yb := vert.start.y, vert.end.y
-				if (y < ya) || (y > yb) {
-					continue // no crossing
-				}
 				x := vert.start.x
 				xa, xb := hor.start.x, hor.end.x
 				if (x < xa) || (x > xb) {
+					continue // no crossing
+				}
+				y := hor.start.y
+				ya, yb := vert.start.y, vert.end.y
+				if (y < ya) || (y > yb) {
 					continue // no crossing
 				}
 				// crossing at x, y
