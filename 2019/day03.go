@@ -103,6 +103,9 @@ func MostCentralCrossing(wires [2][]string) (int, error) {
 					continue // no crossing
 				}
 				// crossing at x, y
+				if (x == 0) && (y == 0) {
+					continue // doesn't count
+				}
 				dist := util.Abs(x) + util.Abs(y)
 				if (best == -1) || (dist < best) {
 					best = dist
@@ -122,6 +125,9 @@ func MostCentralCrossing(wires [2][]string) (int, error) {
 					continue // no crossing
 				}
 				// crossing at x, y
+				if (x == 0) && (y == 0) {
+					continue // doesn't count
+				}
 				dist := util.Abs(x) + util.Abs(y)
 				if (best == -1) || (dist < best) {
 					best = dist
