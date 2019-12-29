@@ -33,6 +33,13 @@ type segment struct {
 	length int
 }
 
+// crossing is a point where two segments cross.
+type crossing struct {
+	position    point
+	firstIndex  int // index of segment in first wire
+	secondIndex int // index of segment in second wire
+}
+
 // wire is a sequence of connected segments starting from the origin.
 type wire []segment
 
@@ -124,23 +131,23 @@ func (w wire) lengthOfSegments(n int) int {
 	return result
 }
 
-// allCrossings returns all points where the two wires cross,
+// allCrossings returns all crossings between the two wires,
 // excluding the origin.
-func allCrossings(wire1, wire2 wire) ([]point, error) {
-	crossings := []point{}
-	for _, seg1 := range wire1 {
-		for _, seg2 := range wire2 {
-			crossing, err := seg1.crosses(seg2)
+func allCrossings(wire1, wire2 wire) ([]crossing, error) {
+	crossings := []crossing{}
+	for i, seg1 := range wire1 {
+		for j, seg2 := range wire2 {
+			pos, err := seg1.crosses(seg2)
 			if err != nil {
 				return nil, err
 			}
-			if crossing == nil {
+			if pos == nil {
 				continue
 			}
-			if (crossing.x == 0) && (crossing.y == 0) {
+			if (pos.x == 0) && (pos.y == 0) {
 				continue
 			}
-			crossings = append(crossings, *crossing)
+			crossings = append(crossings, crossing{*pos, i, j})
 		}
 	}
 	return crossings, nil
@@ -166,9 +173,9 @@ func MostCentralCrossing(wiresDescriptions [2][]string) (int, error) {
 	if len(crossings) == 0 {
 		return 0, fmt.Errorf("No crossing found")
 	}
-	best := crossings[0].manhattanDistance()
+	best := crossings[0].position.manhattanDistance()
 	for _, crossing := range crossings[1:] {
-		dist := crossing.manhattanDistance()
+		dist := crossing.position.manhattanDistance()
 		if dist < best {
 			best = dist
 		}
