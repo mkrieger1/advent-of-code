@@ -42,7 +42,7 @@ func parseSegment(seg string) (direction, int, error) {
 // pointsFromSegments converts a slice of string descriptions of wire segments
 // to a slice of (x, y) coordinates.
 func pointsFromSegments(segments []string) ([][2]int, error) {
-	points := [][2]int{}
+	points := [][2]int{{0, 0}}
 	x, y := 0, 0
 	for _, seg := range segments {
 		dir, length, err := parseSegment(seg)
