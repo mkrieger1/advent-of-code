@@ -20,6 +20,11 @@ type point struct {
 	y int
 }
 
+// manhattanDistance returns the Manhattan distance of a point from the origin.
+func (p point) manhattanDistance() int {
+	return util.Abs(p.x) + util.Abs(p.y)
+}
+
 // segment is a wire between to points.
 type segment struct {
 	start  point
@@ -136,7 +141,7 @@ func MostCentralCrossing(wires [2][]string) (int, error) {
 			if (x == 0) && (y == 0) {
 				continue // doesn't count
 			}
-			dist := util.Abs(x) + util.Abs(y)
+			dist := point{x, y}.manhattanDistance()
 			if (best == -1) || (dist < best) {
 				best = dist
 			}
