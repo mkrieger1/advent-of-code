@@ -115,6 +115,15 @@ func parseWire(descriptions []string) (wire, error) {
 	return segments, nil
 }
 
+// lengthOfSegments returns the total length of the first n segments.
+func (w wire) lengthOfSegments(n int) int {
+	result := 0
+	for _, segment := range w[:n] {
+		result += segment.length
+	}
+	return result
+}
+
 // allCrossings returns all points where the two wires cross,
 // excluding the origin.
 func allCrossings(wire1, wire2 wire) ([]point, error) {
