@@ -109,16 +109,29 @@ func MostCentralCrossing(wires [2][]string) (int, error) {
 			} else {
 				return 0, fmt.Errorf("Segment not horizontal or vertical")
 			}
+
 			x := vert.start.x
-			xa, xb := hor.start.x, hor.end.x
-			if (x < xa) || (x > xb) {
+			var xlow, xhigh int
+			if hor.start.x < hor.end.x {
+				xlow, xhigh = hor.start.x, hor.end.x
+			} else {
+				xlow, xhigh = hor.end.x, hor.start.x
+			}
+			if (x < xlow) || (x > xhigh) {
 				continue // no crossing
 			}
+
 			y := hor.start.y
-			ya, yb := vert.start.y, vert.end.y
-			if (y < ya) || (y > yb) {
+			var ylow, yhigh int
+			if vert.start.y < vert.end.y {
+				ylow, yhigh = vert.start.y, vert.end.y
+			} else {
+				ylow, yhigh = vert.end.y, vert.start.y
+			}
+			if (y < ylow) || (y > yhigh) {
 				continue // no crossing
 			}
+
 			// crossing at x, y
 			if (x == 0) && (y == 0) {
 				continue // doesn't count
