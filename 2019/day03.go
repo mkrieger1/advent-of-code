@@ -33,6 +33,9 @@ type segment struct {
 	length int
 }
 
+// wire is a sequence of connected segments starting from the origin.
+type wire []segment
+
 // crosses returns the point where seg crosses the other segment.
 func (seg segment) crosses(other segment) (*point, error) {
 	var vert, hor segment
@@ -86,10 +89,9 @@ func parseSegment(seg string) (direction, int, error) {
 	return dir, length, nil
 }
 
-// parseSegments converts a slice of string descriptions of wire segments
-// to a slice of segments.
-func parseSegments(descriptions []string) ([]segment, error) {
-	segments := []segment{}
+// parseWire converts a slice of string descriptions of segments to a wire.
+func parseWire(descriptions []string) (wire, error) {
+	segments := wire{}
 	pos := point{0, 0}
 	prev := pos
 	for _, desc := range descriptions {
@@ -115,7 +117,7 @@ func parseSegments(descriptions []string) ([]segment, error) {
 
 // allCrossings returns all points where the two wires cross,
 // excluding the origin.
-func allCrossings(wire1, wire2 []segment) ([]point, error) {
+func allCrossings(wire1, wire2 wire) ([]point, error) {
 	crossings := []point{}
 	for _, seg1 := range wire1 {
 		for _, seg2 := range wire2 {
@@ -135,19 +137,20 @@ func allCrossings(wire1, wire2 []segment) ([]point, error) {
 	return crossings, nil
 }
 
-// MostCentralCrossing returns the Manhattan distance of the crossing
-// of the two wires closest to the center.
-func MostCentralCrossing(wires [2][]string) (int, error) {
+// MostCentralCrossing returns the Manhattan distance of the point closest to
+// the center where the two wires given by the segment string descriptions are
+// crossing.
+func MostCentralCrossing(wiresDescriptions [2][]string) (int, error) {
 	var err error
-	var segments [2][]segment
-	for i := range wires {
-		segments[i], err = parseSegments(wires[i])
+	var wires [2]wire
+	for i := range wiresDescriptions {
+		wires[i], err = parseWire(wiresDescriptions[i])
 		if err != nil {
 			return 0, err
 		}
 	}
 
-	crossings, err := allCrossings(segments[0], segments[1])
+	crossings, err := allCrossings(wires[0], wires[1])
 	if err != nil {
 		return 0, err
 	}
