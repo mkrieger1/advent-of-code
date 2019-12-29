@@ -20,6 +20,14 @@ type point struct {
 	y int
 }
 
+// segment is a wire between to points.
+type segment struct {
+	start  point
+	end    point
+	dir    direction
+	length int
+}
+
 // parseSegment converts a string description of a wire segment
 // to its direction and length.
 func parseSegment(seg string) (direction, int, error) {
@@ -45,13 +53,14 @@ func parseSegment(seg string) (direction, int, error) {
 	return dir, length, nil
 }
 
-// pointsFromSegments converts a slice of string descriptions of wire segments
-// to a slice of points.
-func pointsFromSegments(segments []string) ([]point, error) {
+// parseSegments converts a slice of string descriptions of wire segments
+// to a slice of segments.
+func parseSegments(descriptions []string) ([]segment, error) {
+	segments := []segment{}
 	pos := point{0, 0}
-	points := []point{pos}
-	for _, seg := range segments {
-		dir, length, err := parseSegment(seg)
+	prev := pos
+	for _, desc := range descriptions {
+		dir, length, err := parseSegment(desc)
 		if err != nil {
 			return nil, err
 		}
@@ -65,46 +74,38 @@ func pointsFromSegments(segments []string) ([]point, error) {
 		case right:
 			pos.x += length
 		}
-		points = append(points, pos)
+		segments = append(segments, segment{prev, pos, dir, length})
+		prev = pos
 	}
-	return points, nil
+	return segments, nil
 }
 
 // MostCentralCrossing returns the Manhattan distance of the crossing
 // of the two wires closest to the center.
 func MostCentralCrossing(wires [2][]string) (int, error) {
 	var err error
-	var points [2][]point
-	for i, segments := range wires {
-		points[i], err = pointsFromSegments(segments)
+	var segments [2][]segment
+	for i := range wires {
+		segments[i], err = parseSegments(wires[i])
 		if err != nil {
 			return 0, err
 		}
 	}
-	points1, points2 := points[0], points[1]
-	best := -1
 
-	for i := range points1 {
-		if i == 0 {
-			continue
-		}
-		for j := range points2 {
-			if j == 0 {
-				continue
-			}
-			start1, end1 := points1[i-1], points1[i]
-			start2, end2 := points2[j-1], points2[j]
-			if start1.x == end1.x { // segment1 vertical
-				x := start1.x
-				xa, xb := start2.x, end2.x
+	best := -1
+	for _, seg1 := range segments[0] {
+		for _, seg2 := range segments[1] {
+			if seg1.start.x == seg1.end.x { // segment1 vertical
+				x := seg1.start.x
+				xa, xb := seg2.start.x, seg2.end.x
 				if xa == xb {
 					continue // both vertical
 				}
 				if (x < xa) || (x > xb) {
 					continue // no crossing
 				}
-				y := start2.y
-				ya, yb := start1.y, end1.y
+				y := seg2.start.y
+				ya, yb := seg1.start.y, seg1.end.y
 				if (y < ya) || (y > yb) {
 					continue // no crossing
 				}
@@ -116,17 +117,17 @@ func MostCentralCrossing(wires [2][]string) (int, error) {
 				if (best == -1) || (dist < best) {
 					best = dist
 				}
-			} else if start1.y == end1.y { // segment1 horizontal
-				y := start1.y
-				ya, yb := start2.y, end2.y
+			} else if seg1.start.y == seg1.end.y { // segment1 horizontal
+				y := seg1.start.y
+				ya, yb := seg2.start.y, seg2.end.y
 				if ya == yb {
 					continue // both horizontal
 				}
 				if (y < ya) || (y > yb) {
 					continue // no crossing
 				}
-				x := start2.x
-				xa, xb := start1.x, end1.x
+				x := seg2.start.x
+				xa, xb := seg1.start.x, seg1.end.x
 				if (x < xa) || (x > xb) {
 					continue // no crossing
 				}
