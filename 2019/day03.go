@@ -20,9 +20,14 @@ type point struct {
 	y int
 }
 
-// manhattanDistance returns the Manhattan distance of a point from the origin.
-func (p point) manhattanDistance() int {
-	return util.Abs(p.x) + util.Abs(p.y)
+// manhattanDistance returns the Manhattan distance to the other point.
+func (p point) manhattanDistance(other point) int {
+	return util.Abs(p.x-other.x) + util.Abs(p.y-other.y)
+}
+
+// manhattanDistanceToOrigin returns the Manhattan distance to the origin.
+func (p point) manhattanDistanceToOrigin() int {
+	return p.manhattanDistance(point{0, 0})
 }
 
 // segment is a wire between to points.
@@ -122,6 +127,20 @@ func parseWire(descriptions []string) (wire, error) {
 	return segments, nil
 }
 
+// parseTwoWires converts two slices of string descriptions of segments
+// to two wires.
+func parseTwoWires(descriptions [2][]string) ([2]wire, error) {
+	var err error
+	var wires [2]wire
+	for i := range descriptions {
+		wires[i], err = parseWire(descriptions[i])
+		if err != nil {
+			return wires, err
+		}
+	}
+	return wires, nil
+}
+
 // lengthOfSegments returns the total length of the first n segments.
 func (w wire) lengthOfSegments(n int) int {
 	result := 0
@@ -157,15 +176,10 @@ func allCrossings(wire1, wire2 wire) ([]crossing, error) {
 // the center where the two wires given by the segment string descriptions are
 // crossing.
 func MostCentralCrossing(wiresDescriptions [2][]string) (int, error) {
-	var err error
-	var wires [2]wire
-	for i := range wiresDescriptions {
-		wires[i], err = parseWire(wiresDescriptions[i])
-		if err != nil {
-			return 0, err
-		}
+	wires, err := parseTwoWires(wiresDescriptions)
+	if err != nil {
+		return 0, err
 	}
-
 	crossings, err := allCrossings(wires[0], wires[1])
 	if err != nil {
 		return 0, err
@@ -173,11 +187,44 @@ func MostCentralCrossing(wiresDescriptions [2][]string) (int, error) {
 	if len(crossings) == 0 {
 		return 0, fmt.Errorf("No crossing found")
 	}
-	best := crossings[0].position.manhattanDistance()
+	best := crossings[0].position.manhattanDistanceToOrigin()
 	for _, crossing := range crossings[1:] {
-		dist := crossing.position.manhattanDistance()
+		dist := crossing.position.manhattanDistanceToOrigin()
 		if dist < best {
 			best = dist
+		}
+	}
+	return best, nil
+}
+
+// delay returns the combined length of the wires from the origin to the
+// crossing.
+func (c crossing) delay(wire1, wire2 wire) int {
+	return wire1.lengthOfSegments(c.firstIndex) +
+		wire1[c.firstIndex].start.manhattanDistance(c.position) +
+		wire2.lengthOfSegments(c.secondIndex) +
+		wire2[c.secondIndex].start.manhattanDistance(c.position)
+}
+
+// ShortestDelayCrossing returns the combined length of the wires from the
+// origin to the crossing where this length is minimal.
+func ShortestDelayCrossing(wiresDescriptions [2][]string) (int, error) {
+	wires, err := parseTwoWires(wiresDescriptions)
+	if err != nil {
+		return 0, err
+	}
+	crossings, err := allCrossings(wires[0], wires[1])
+	if err != nil {
+		return 0, err
+	}
+	if len(crossings) == 0 {
+		return 0, fmt.Errorf("No crossing found")
+	}
+	best := crossings[0].delay(wires[0], wires[1])
+	for _, crossing := range crossings[1:] {
+		delay := crossing.delay(wires[0], wires[1])
+		if delay < best {
+			best = delay
 		}
 	}
 	return best, nil
