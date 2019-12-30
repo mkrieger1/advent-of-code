@@ -3,6 +3,7 @@ package aoc2019
 import (
 	"aoc2019/util"
 	"fmt"
+	"io"
 )
 
 type direction int
@@ -141,6 +142,20 @@ func parseTwoWires(descriptions [2][]string) ([2]wire, error) {
 	return wires, nil
 }
 
+// ReadTwoWires reads two lines and converts them to two wires.
+func ReadTwoWires(r io.Reader) ([2]wire, error) {
+	var err error
+	var descriptions [2][]string
+	for i := 0; i < 2; i++ {
+		descriptions[i], err =
+			util.ReadSeparatedStringsFromLine(r, ",")
+		if err != nil {
+			return [2]wire{}, err
+		}
+	}
+	return parseTwoWires(descriptions)
+}
+
 // lengthOfSegments returns the total length of the first n segments.
 func (w wire) lengthOfSegments(n int) int {
 	result := 0
@@ -173,13 +188,8 @@ func allCrossings(wire1, wire2 wire) ([]crossing, error) {
 }
 
 // MostCentralCrossing returns the Manhattan distance of the point closest to
-// the center where the two wires given by the segment string descriptions are
-// crossing.
-func MostCentralCrossing(wiresDescriptions [2][]string) (int, error) {
-	wires, err := parseTwoWires(wiresDescriptions)
-	if err != nil {
-		return 0, err
-	}
+// the center where the two wires are crossing.
+func MostCentralCrossing(wires [2]wire) (int, error) {
 	crossings, err := allCrossings(wires[0], wires[1])
 	if err != nil {
 		return 0, err
@@ -208,11 +218,7 @@ func (c crossing) delay(wire1, wire2 wire) int {
 
 // ShortestDelayCrossing returns the combined length of the wires from the
 // origin to the crossing where this length is minimal.
-func ShortestDelayCrossing(wiresDescriptions [2][]string) (int, error) {
-	wires, err := parseTwoWires(wiresDescriptions)
-	if err != nil {
-		return 0, err
-	}
+func ShortestDelayCrossing(wires [2]wire) (int, error) {
 	crossings, err := allCrossings(wires[0], wires[1])
 	if err != nil {
 		return 0, err
