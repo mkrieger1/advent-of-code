@@ -40,3 +40,86 @@ func digits(x int) ([]int, error) {
 	}
 	return result, nil
 }
+
+// rangeSize returns the number of integers in the inclusive range.
+func rangeSize(low, high int) int {
+	if high < low {
+		return 0
+	}
+	return high - low + 1
+}
+
+func notHigher(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func notLower(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func largestCombination(high []int) []int {
+	result := make([]int, len(high))
+	result[0] = high[0]
+	for i := 1; i < len(high); i++ {
+		if result[i-1] > high[i] {
+			result[i-1] -= 1
+			result[i] = 9
+		} else {
+			result[i] = high[i]
+		}
+	}
+	return high
+}
+
+// numCombinationsSameDigit returns the number of combinations of 6 digits
+// within the range, where all digits are non-descending from left to right and
+// the n-th pair of digits are identical (n=1: first and second).
+func numCombinationsSameDigit(low, high []int, n int) (int, error) {
+	if len(low) != 6 || len(high) != 6 {
+		return 0, fmt.Errorf("Limits must be 6 digits")
+	}
+	if !(1 <= n && n < 6) {
+		return 0, fmt.Errorf("n must be between 1 and 5")
+	}
+	highCopy := largestCombination(high)
+	result := rangeSize(low[0], highCopy[0])
+	for i := 1; i < 6; i++ {
+		if i < n {
+			low[i] = notLower(low[i], low[i-1]+1)
+		} else if i == n {
+			highCopy[i] = notHigher(highCopy[i], highCopy[i-1])
+			low[i] = notLower(low[i], low[i-1])
+		} else {
+			low[i] = notLower(low[i], low[i-1])
+		}
+		result *= rangeSize(low[i], highCopy[i])
+	}
+	return result, nil
+}
+
+// NumPasswords returns the number of valid passwords within the integer range.
+func NumPasswords(low, high int) (int, error) {
+	lowDigits, err := digits(low)
+	if err != nil {
+		return 0, err
+	}
+	highDigits, err := digits(high)
+	if err != nil {
+		return 0, err
+	}
+	result := 0
+	for n := 1; n < 6; n++ {
+		comb, err := numCombinationsSameDigit(lowDigits, highDigits, n)
+		if err != nil {
+			return 0, err
+		}
+		result += comb
+	}
+	return result, nil
+}
