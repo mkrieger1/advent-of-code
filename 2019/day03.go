@@ -167,10 +167,10 @@ func (w wire) lengthOfSegments(n int) int {
 
 // allCrossings returns all crossings between the two wires,
 // excluding the origin.
-func allCrossings(wire1, wire2 wire) ([]crossing, error) {
+func allCrossings(wires [2]wire) ([]crossing, error) {
 	crossings := []crossing{}
-	for i, seg1 := range wire1 {
-		for j, seg2 := range wire2 {
+	for i, seg1 := range wires[0] {
+		for j, seg2 := range wires[1] {
 			pos, err := seg1.crosses(seg2)
 			if err != nil {
 				return nil, err
@@ -190,7 +190,7 @@ func allCrossings(wire1, wire2 wire) ([]crossing, error) {
 // MostCentralCrossing returns the Manhattan distance of the point closest to
 // the center where the two wires are crossing.
 func MostCentralCrossing(wires [2]wire) (int, error) {
-	crossings, err := allCrossings(wires[0], wires[1])
+	crossings, err := allCrossings(wires)
 	if err != nil {
 		return 0, err
 	}
@@ -209,26 +209,26 @@ func MostCentralCrossing(wires [2]wire) (int, error) {
 
 // delay returns the combined length of the wires from the origin to the
 // crossing.
-func (c crossing) delay(wire1, wire2 wire) int {
-	return wire1.lengthOfSegments(c.firstIndex) +
-		wire1[c.firstIndex].start.manhattanDistance(c.position) +
-		wire2.lengthOfSegments(c.secondIndex) +
-		wire2[c.secondIndex].start.manhattanDistance(c.position)
+func (c crossing) delay(wires [2]wire) int {
+	return wires[0].lengthOfSegments(c.firstIndex) +
+		wires[0][c.firstIndex].start.manhattanDistance(c.position) +
+		wires[1].lengthOfSegments(c.secondIndex) +
+		wires[1][c.secondIndex].start.manhattanDistance(c.position)
 }
 
 // ShortestDelayCrossing returns the combined length of the wires from the
 // origin to the crossing where this length is minimal.
 func ShortestDelayCrossing(wires [2]wire) (int, error) {
-	crossings, err := allCrossings(wires[0], wires[1])
+	crossings, err := allCrossings(wires)
 	if err != nil {
 		return 0, err
 	}
 	if len(crossings) == 0 {
 		return 0, fmt.Errorf("No crossing found")
 	}
-	best := crossings[0].delay(wires[0], wires[1])
+	best := crossings[0].delay(wires)
 	for _, crossing := range crossings[1:] {
-		delay := crossing.delay(wires[0], wires[1])
+		delay := crossing.delay(wires)
 		if delay < best {
 			best = delay
 		}
