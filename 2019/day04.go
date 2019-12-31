@@ -103,8 +103,9 @@ func numCombinationsSameDigit(low, high []int, n int) (int, error) {
 	return result, nil
 }
 
-// NumPasswords returns the number of valid passwords within the integer range.
-func NumPasswords(low, high int) (int, error) {
+// NumPasswordsTooClever returns the number of valid passwords within the
+// integer range and tries to be clever so it doesn't work.
+func NumPasswordsTooClever(low, high int) (int, error) {
 	lowDigits, err := digits(low)
 	if err != nil {
 		return 0, err
@@ -120,6 +121,35 @@ func NumPasswords(low, high int) (int, error) {
 			return 0, err
 		}
 		result += comb
+	}
+	return result, nil
+}
+
+func isValidPassword(x int) bool {
+	twoConsecutiveFound := false
+	digitToTheRight := 10 // initialize higher than any digit
+	// going in reverse
+	for ; x > 0; x /= 10 {
+		digit := x % 10
+		if digit == digitToTheRight {
+			twoConsecutiveFound = true
+		}
+		if digit > digitToTheRight {
+			return false
+		}
+		digitToTheRight = digit
+	}
+	return twoConsecutiveFound
+}
+
+// NumPasswords returns the number of valid passwords within the integer range
+// (inclusive) by testing each candidate individually.
+func NumPasswords(low, high int) (int, error) {
+	result := 0
+	for candidate := low; candidate <= high; candidate++ {
+		if isValidPassword(candidate) {
+			result += 1
+		}
 	}
 	return result, nil
 }
