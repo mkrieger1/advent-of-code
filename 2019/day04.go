@@ -142,12 +142,57 @@ func isValidPassword(x int) bool {
 	return twoConsecutiveFound
 }
 
-// NumPasswords returns the number of valid passwords within the integer range
-// (inclusive) by testing each candidate individually.
-func NumPasswords(low, high int) (int, error) {
+func isReallyValidPassword(x int) bool {
+	groups := []int{}
+	currentGroupSize := 1
+	digitToTheRight := 10 // initialize higher than any digit
+	// going in reverse
+	for ; x > 0; x /= 10 {
+		digit := x % 10
+		if digit > digitToTheRight {
+			return false
+		}
+		if digit == digitToTheRight {
+			currentGroupSize += 1
+		} else if currentGroupSize > 1 {
+			groups = append(groups, currentGroupSize)
+			currentGroupSize = 1
+		}
+		digitToTheRight = digit
+	}
+	if currentGroupSize > 1 {
+		groups = append(groups, currentGroupSize)
+	}
+	if len(groups) == 0 {
+		return false
+	} else {
+		for _, size := range groups {
+			if size == 2 {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+// NumValidPasswords returns the number of seemingly valid passwords within the
+// integer range (inclusive) by testing each candidate individually.
+func NumValidPasswords(low, high int) (int, error) {
 	result := 0
 	for candidate := low; candidate <= high; candidate++ {
 		if isValidPassword(candidate) {
+			result += 1
+		}
+	}
+	return result, nil
+}
+
+// NumReallyValidPasswords returns the number of valid passwords within the
+// integer range (inclusive) by testing each candidate individually.
+func NumReallyValidPasswords(low, high int) (int, error) {
+	result := 0
+	for candidate := low; candidate <= high; candidate++ {
+		if isReallyValidPassword(candidate) {
 			result += 1
 		}
 	}
