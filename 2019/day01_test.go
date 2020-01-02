@@ -39,3 +39,37 @@ func TestFuelForModulesAlone(t *testing.T) {
 			modules, result, expected)
 	}
 }
+
+func TestFuelToLaunchMassWithFuel(t *testing.T) {
+	cases := []struct {
+		in, out int
+	}{
+		{1969, 966},
+		{100756, 50346},
+	}
+	for _, c := range cases {
+		result := fuelToLaunchMassWithFuel(c.in)
+		if result != c.out {
+			t.Errorf("fuelToLaunchMassWithFuel(%d) = %d, expected %d",
+				c.in, result, c.out)
+		}
+	}
+}
+
+func TestFuelForModulesIncludingFuel(t *testing.T) {
+	f, err := os.Open("day01.txt")
+	if err != nil {
+		t.Fatalf("Failed to read test input: %v", err)
+	}
+	modules, err := util.ReadIntsFromLines(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Close()
+	result := FuelForModulesIncludingFuel(modules)
+	expected := 5120654
+	if result != expected {
+		t.Errorf("FuelForModulesIncludingFuel(%v) = %d, expected %d",
+			modules, result, expected)
+	}
+}
