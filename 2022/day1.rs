@@ -19,9 +19,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             elf.push(value);
         }
         raw_line.clear();
-        println!("elf = {:?}", elf);
-        println!("elves = {:?}", elves);
     }
+    elves.push(elf.clone());
+
+    let result = elves.iter().map(|elf| elf.iter().sum::<i32>()).max().unwrap();
+    println!("{}", result);
 
     Ok(())
 }
