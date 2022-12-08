@@ -32,3 +32,29 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("{}", max_elf_calories(io::stdin().lock())?);
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_max_elf_calories() {
+        let input = "
+        1000
+        2000
+        3000
+
+        4000
+
+        5000
+        6000
+
+        7000
+        8000
+        9000
+
+        10000
+        ";
+        assert_eq!(max_elf_calories(input.as_bytes()).unwrap(), 24000);
+    }
+}
