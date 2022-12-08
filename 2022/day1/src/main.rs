@@ -9,8 +9,8 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     while stdin.read_line(&mut raw_line)? != 0 {
         let line = raw_line.trim();
-        if line.len() == 0 {
-            if elf.len() > 0 {
+        if line.is_empty() {
+            if !elf.is_empty() {
                 elves.push(elf.clone());
                 elf.clear();
             }
