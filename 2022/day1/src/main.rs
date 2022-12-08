@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::io;
 
-fn max_elf_calories(input: io::Stdin) -> Result<i32, io::Error> {
+fn max_elf_calories<B: io::BufRead>(mut input: B) -> Result<i32, io::Error> {
     let mut raw_line = String::new();
     let mut elves: Vec<Vec<i32>> = Vec::new();
     let mut elf: Vec<i32> = Vec::new();
@@ -29,6 +29,6 @@ fn max_elf_calories(input: io::Stdin) -> Result<i32, io::Error> {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    println!("{}", max_elf_calories(io::stdin())?);
+    println!("{}", max_elf_calories(io::stdin().lock())?);
     Ok(())
 }
