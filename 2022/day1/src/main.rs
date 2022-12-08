@@ -21,7 +21,11 @@ fn max_elf_calories(input: io::Stdin) -> Result<i32, io::Error> {
     }
     elves.push(elf.clone());
 
-    Ok(elves.iter().map(|elf| elf.iter().sum::<i32>()).max().unwrap_or(0))
+    Ok(elves
+        .iter()
+        .map(|elf| elf.iter().sum::<i32>())
+        .max()
+        .unwrap_or(0))
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
