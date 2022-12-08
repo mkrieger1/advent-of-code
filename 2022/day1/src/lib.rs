@@ -1,7 +1,6 @@
-use std::error::Error;
 use std::io;
 
-fn max_elf_calories<B: io::BufRead>(mut input: B) -> Result<i32, io::Error> {
+pub fn max_elf_calories<B: io::BufRead>(mut input: B) -> Result<i32, io::Error> {
     let mut raw_line = String::new();
     let mut elves: Vec<Vec<i32>> = Vec::new();
     let mut elf: Vec<i32> = Vec::new();
@@ -28,7 +27,7 @@ fn max_elf_calories<B: io::BufRead>(mut input: B) -> Result<i32, io::Error> {
         .unwrap_or(0))
 }
 
-fn top_3_elves_calories<B: io::BufRead>(mut input: B) -> Result<i32, io::Error> {
+pub fn top_3_elves_calories<B: io::BufRead>(mut input: B) -> Result<i32, io::Error> {
     let mut raw_line = String::new();
     let mut elves: Vec<Vec<i32>> = Vec::new();
     let mut elf: Vec<i32> = Vec::new();
@@ -55,11 +54,6 @@ fn top_3_elves_calories<B: io::BufRead>(mut input: B) -> Result<i32, io::Error> 
         calories
     };
     Ok(top_calories.iter().take(3).sum())
-}
-
-fn main() -> Result<(), Box<dyn Error>> {
-    println!("{}", max_elf_calories(io::stdin().lock())?);
-    Ok(())
 }
 
 #[cfg(test)]
