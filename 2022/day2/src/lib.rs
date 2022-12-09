@@ -9,8 +9,25 @@ pub fn rock_paper_scissors<B: io::BufRead>(input: B) -> Result<i32, io::Error> {
 
 fn one_round(line: &str) -> i32 {
     let parts: Vec<_> = line.split_whitespace().collect();
-    dbg!(&parts);
-    0
+    let shape_score = match parts[..] {
+        [_, "X"] => 1, // rock
+        [_, "Y"] => 2, // paper
+        [_, "Z"] => 3, // scissors
+        _ => 0,
+    };
+    let outcome_score = match parts[..] {
+        ["A", "X"] => 3, // rock = rock
+        ["A", "Y"] => 6, // rock < paper
+        ["A", "Z"] => 0, // rock > scissors
+        ["B", "X"] => 0, // paper > rock
+        ["B", "Y"] => 3, // paper = paper
+        ["B", "Z"] => 6, // paper < scissors
+        ["C", "X"] => 6, // scissors < rock
+        ["C", "Y"] => 0, // scissors > paper
+        ["C", "Z"] => 3, // scissors = scissors
+        _ => 0,
+    };
+    shape_score + outcome_score
 }
 
 #[cfg(test)]
