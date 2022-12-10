@@ -1,5 +1,6 @@
 use std::io;
 
+#[derive(Debug, PartialEq)]
 enum Shape {
     Rock,
     Paper,
@@ -12,6 +13,7 @@ enum Outcome {
     Draw,
 }
 
+#[derive(Debug, PartialEq)]
 struct Round {
     theirs: Shape,
     ours: Shape,
@@ -158,5 +160,17 @@ mod tests {
         assert_eq!(one_round_part2("A Y"), 4);
         assert_eq!(one_round_part2("B X"), 1);
         assert_eq!(one_round_part2("C Z"), 7);
+    }
+
+    #[test]
+    fn test_parse_round_part2_choose_scissors() {
+        // they choose rock and we need to lose -> choose scissors
+        assert_eq!(
+            parse_round_part2(&["A", "X"].to_vec()),
+            Some(Round {
+                theirs: Shape::Rock,
+                ours: Shape::Scissors
+            })
+        );
     }
 }
