@@ -47,7 +47,7 @@ fn shape_score(ours: &Shape) -> i32 {
     }
 }
 
-fn parse_theirs(line_parts: &Vec<&str>) -> Option<Shape> {
+fn parse_theirs(line_parts: &[&str]) -> Option<Shape> {
     match line_parts[..] {
         ["A", _] => Some(Shape::Rock),
         ["B", _] => Some(Shape::Paper),
@@ -56,7 +56,7 @@ fn parse_theirs(line_parts: &Vec<&str>) -> Option<Shape> {
     }
 }
 
-fn parse_ours_part1(line_parts: &Vec<&str>) -> Option<Shape> {
+fn parse_ours_part1(line_parts: &[&str]) -> Option<Shape> {
     match line_parts[..] {
         [_, "X"] => Some(Shape::Rock),
         [_, "Y"] => Some(Shape::Paper),
@@ -65,23 +65,14 @@ fn parse_ours_part1(line_parts: &Vec<&str>) -> Option<Shape> {
     }
 }
 
-fn parse_round_part1(line_parts: &Vec<&str>) -> Option<Round> {
+fn parse_round_part1(line_parts: &[&str]) -> Option<Round> {
     Some(Round {
-        theirs: parse_theirs(&line_parts)?,
-        ours: parse_ours_part1(&line_parts)?,
+        theirs: parse_theirs(line_parts)?,
+        ours: parse_ours_part1(line_parts)?,
     })
 }
 
-fn one_round_part1(line: &str) -> i32 {
-    let parts: Vec<_> = line.split_whitespace().collect();
-    if let Some(round) = parse_round_part1(&parts) {
-        shape_score(&round.ours) + outcome_score(&round_outcome(&round))
-    } else {
-        0
-    }
-}
-
-fn parse_ours_part2(line_parts: &Vec<&str>) -> Option<Outcome> {
+fn parse_ours_part2(line_parts: &[&str]) -> Option<Outcome> {
     match line_parts[..] {
         [_, "X"] => Some(Outcome::Lose),
         [_, "Y"] => Some(Outcome::Draw),
@@ -90,9 +81,9 @@ fn parse_ours_part2(line_parts: &Vec<&str>) -> Option<Outcome> {
     }
 }
 
-fn parse_round_part2(line_parts: &Vec<&str>) -> Option<Round> {
-    let theirs = parse_theirs(&line_parts)?;
-    let outcome = parse_ours_part2(&line_parts)?;
+fn parse_round_part2(line_parts: &[&str]) -> Option<Round> {
+    let theirs = parse_theirs(line_parts)?;
+    let outcome = parse_ours_part2(line_parts)?;
     let ours = match (&theirs, &outcome) {
         (Shape::Rock, Outcome::Draw)
         | (Shape::Paper, Outcome::Lose)
@@ -105,27 +96,35 @@ fn parse_round_part2(line_parts: &Vec<&str>) -> Option<Round> {
     Some(Round { theirs, ours })
 }
 
-fn one_round_part2(line: &str) -> i32 {
+fn one_round<F>(line: &str, parse_round: F) -> i32
+where
+    F: Fn(&[&str]) -> Option<Round>,
+{
     let parts: Vec<_> = line.split_whitespace().collect();
-    if let Some(round) = parse_round_part2(&parts) {
+    if let Some(round) = parse_round(&parts) {
         shape_score(&round.ours) + outcome_score(&round_outcome(&round))
     } else {
         0
     }
 }
 
-pub fn rock_paper_scissors_part1<B: io::BufRead>(input: B) -> Result<i32, io::Error> {
+fn rock_paper_scissors<B, F>(input: B, parse_round: F) -> Result<i32, io::Error>
+where
+    B: io::BufRead,
+    F: Fn(&[&str]) -> Option<Round>,
+{
     input
         .lines()
-        .map(|line| -> Result<i32, io::Error> { Ok(one_round_part1(&line?)) })
+        .map(|line| -> Result<i32, io::Error> { Ok(one_round(&line?, &parse_round)) })
         .sum()
 }
 
+pub fn rock_paper_scissors_part1<B: io::BufRead>(input: B) -> Result<i32, io::Error> {
+    rock_paper_scissors(input, parse_round_part1)
+}
+
 pub fn rock_paper_scissors_part2<B: io::BufRead>(input: B) -> Result<i32, io::Error> {
-    input
-        .lines()
-        .map(|line| -> Result<i32, io::Error> { Ok(one_round_part2(&line?)) })
-        .sum()
+    rock_paper_scissors(input, parse_round_part2)
 }
 
 #[cfg(test)]
@@ -145,9 +144,9 @@ mod tests {
 
     #[test]
     fn test_one_round_part1() {
-        assert_eq!(one_round_part1("A Y"), 8);
-        assert_eq!(one_round_part1("B X"), 1);
-        assert_eq!(one_round_part1("C Z"), 6);
+        assert_eq!(one_round("A Y", parse_round_part1), 8);
+        assert_eq!(one_round("B X", parse_round_part1), 1);
+        assert_eq!(one_round("C Z", parse_round_part1), 6);
     }
 
     #[test]
@@ -157,16 +156,16 @@ mod tests {
 
     #[test]
     fn test_one_round_part2() {
-        assert_eq!(one_round_part2("A Y"), 4);
-        assert_eq!(one_round_part2("B X"), 1);
-        assert_eq!(one_round_part2("C Z"), 7);
+        assert_eq!(one_round("A Y", parse_round_part2), 4);
+        assert_eq!(one_round("B X", parse_round_part2), 1);
+        assert_eq!(one_round("C Z", parse_round_part2), 7);
     }
 
     #[test]
     fn test_parse_round_part2_choose_scissors() {
         // they choose rock and we need to lose -> choose scissors
         assert_eq!(
-            parse_round_part2(&["A", "X"].to_vec()),
+            parse_round_part2(&["A", "X"]),
             Some(Round {
                 theirs: Shape::Rock,
                 ours: Shape::Scissors
