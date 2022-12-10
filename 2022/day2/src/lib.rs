@@ -100,7 +100,7 @@ fn parse_round_part2(line_parts: &Vec<&str>) -> Option<Round> {
         (Shape::Rock, Outcome::Win)
         | (Shape::Paper, Outcome::Draw)
         | (Shape::Scissors, Outcome::Lose) => Shape::Paper,
-        _ => Shape::Paper,
+        _ => Shape::Scissors,
     };
     Some(Round { theirs, ours })
 }
