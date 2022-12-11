@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+
 #[derive(Copy, Clone, Debug, PartialEq)]
 enum Shape {
     Rock,
@@ -106,27 +108,30 @@ where
     }
 }
 
-fn rock_paper_scissors<'a, I, F>(input: I, parse_round: F) -> i32
+fn rock_paper_scissors<I, F>(input: I, parse_round: F) -> i32
 where
-    I: IntoIterator<Item = &'a str>,
+    I: IntoIterator,
+    I::Item: Borrow<str>,
     F: Fn(&[&str]) -> Option<Round>,
 {
     input
         .into_iter()
-        .map(|line| one_round(line, &parse_round))
+        .map(|line| one_round(line.borrow(), &parse_round))
         .sum()
 }
 
-pub fn rock_paper_scissors_part1<'a, I>(input: I) -> i32
+pub fn rock_paper_scissors_part1<I>(input: I) -> i32
 where
-    I: IntoIterator<Item = &'a str>,
+    I: IntoIterator,
+    I::Item: Borrow<str>,
 {
     rock_paper_scissors(input, parse_round_part1)
 }
 
-pub fn rock_paper_scissors_part2<'a, I>(input: I) -> i32
+pub fn rock_paper_scissors_part2<I>(input: I) -> i32
 where
-    I: IntoIterator<Item = &'a str>,
+    I: IntoIterator,
+    I::Item: Borrow<str>,
 {
     rock_paper_scissors(input, parse_round_part2)
 }
