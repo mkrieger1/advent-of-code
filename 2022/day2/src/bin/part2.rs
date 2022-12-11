@@ -2,10 +2,10 @@ use std::error::Error;
 use std::io;
 use std::io::BufRead;
 
-use day2::{Part2, RockPaperScissors};
+use day2::rock_paper_scissors_part2;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let lines = io::stdin().lock().lines().filter_map(Result::ok);
-    println!("{}", RockPaperScissors { strategy: Part2 }.play(lines));
+    println!("{}", rock_paper_scissors_part2(lines));
     Ok(())
 }

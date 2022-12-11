@@ -1,7 +1,7 @@
 use std::borrow::Borrow;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum Shape {
+enum Shape {
     Rock,
     Paper,
     Scissors,
@@ -56,11 +56,11 @@ fn parse_theirs(line_parts: &[&str]) -> Option<Shape> {
     }
 }
 
-pub trait ChooseOurs {
+trait ChooseOurs {
     fn choose_ours(&self, line_parts: &[&str]) -> Option<Shape>;
 }
 
-pub struct Part1;
+struct Part1;
 
 impl ChooseOurs for Part1 {
     fn choose_ours(&self, line_parts: &[&str]) -> Option<Shape> {
@@ -73,7 +73,7 @@ impl ChooseOurs for Part1 {
     }
 }
 
-pub struct Part2;
+struct Part2;
 
 impl ChooseOurs for Part2 {
     fn choose_ours(&self, line_parts: &[&str]) -> Option<Shape> {
@@ -96,8 +96,8 @@ impl ChooseOurs for Part2 {
     }
 }
 
-pub struct RockPaperScissors<S> {
-    pub strategy: S,
+struct RockPaperScissors<S> {
+    strategy: S,
 }
 
 impl<S> RockPaperScissors<S>
@@ -113,7 +113,7 @@ where
         Some(shape_score(round.ours) + outcome_score(round_outcome(round)))
     }
 
-    pub fn play<I>(&self, input: I) -> i32
+    fn play<I>(&self, input: I) -> i32
     where
         I: IntoIterator,
         I::Item: Borrow<str>,
@@ -123,6 +123,24 @@ where
             .map(|line| self.one_round(line.borrow()).unwrap_or(0))
             .sum()
     }
+}
+
+pub fn rock_paper_scissors_part1<I>(input: I) -> i32
+where
+    I: IntoIterator,
+    I::Item: Borrow<str>,
+{
+    let r = RockPaperScissors { strategy: Part1 };
+    r.play(input)
+}
+
+pub fn rock_paper_scissors_part2<I>(input: I) -> i32
+where
+    I: IntoIterator,
+    I::Item: Borrow<str>,
+{
+    let r = RockPaperScissors { strategy: Part2 };
+    r.play(input)
 }
 
 #[cfg(test)]
@@ -137,8 +155,7 @@ mod tests {
 
     #[test]
     fn test_rock_paper_scissors_part1() {
-        let r = RockPaperScissors { strategy: Part1 };
-        assert_eq!(r.play(EXAMPLE.lines()), 15);
+        assert_eq!(rock_paper_scissors_part1(EXAMPLE.lines()), 15);
     }
 
     #[test]
@@ -151,8 +168,7 @@ mod tests {
 
     #[test]
     fn test_rock_paper_scissors_part2() {
-        let r = RockPaperScissors { strategy: Part2 };
-        assert_eq!(r.play(EXAMPLE.lines()), 12);
+        assert_eq!(rock_paper_scissors_part2(EXAMPLE.lines()), 12);
     }
 
     #[test]
