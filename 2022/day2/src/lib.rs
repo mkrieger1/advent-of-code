@@ -1,5 +1,3 @@
-use std::io;
-
 #[derive(Copy, Clone, Debug, PartialEq)]
 enum Shape {
     Rock,
@@ -108,22 +106,28 @@ where
     }
 }
 
-fn rock_paper_scissors<B, F>(input: B, parse_round: F) -> Result<i32, io::Error>
+fn rock_paper_scissors<'a, I, F>(input: I, parse_round: F) -> i32
 where
-    B: io::BufRead,
+    I: IntoIterator<Item = &'a str>,
     F: Fn(&[&str]) -> Option<Round>,
 {
     input
-        .lines()
-        .map(|line| -> Result<i32, io::Error> { Ok(one_round(&line?, &parse_round)) })
+        .into_iter()
+        .map(|line| one_round(line, &parse_round))
         .sum()
 }
 
-pub fn rock_paper_scissors_part1<B: io::BufRead>(input: B) -> Result<i32, io::Error> {
+pub fn rock_paper_scissors_part1<'a, I>(input: I) -> i32
+where
+    I: IntoIterator<Item = &'a str>,
+{
     rock_paper_scissors(input, parse_round_part1)
 }
 
-pub fn rock_paper_scissors_part2<B: io::BufRead>(input: B) -> Result<i32, io::Error> {
+pub fn rock_paper_scissors_part2<'a, I>(input: I) -> i32
+where
+    I: IntoIterator<Item = &'a str>,
+{
     rock_paper_scissors(input, parse_round_part2)
 }
 
@@ -139,7 +143,7 @@ mod tests {
 
     #[test]
     fn test_rock_paper_scissors_part1() {
-        assert_eq!(rock_paper_scissors_part1(EXAMPLE.as_bytes()).unwrap(), 15);
+        assert_eq!(rock_paper_scissors_part1(EXAMPLE.lines()), 15);
     }
 
     #[test]
@@ -151,7 +155,7 @@ mod tests {
 
     #[test]
     fn test_rock_paper_scissors_part2() {
-        assert_eq!(rock_paper_scissors_part2(EXAMPLE.as_bytes()).unwrap(), 12);
+        assert_eq!(rock_paper_scissors_part2(EXAMPLE.lines()), 12);
     }
 
     #[test]
