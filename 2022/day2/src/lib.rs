@@ -1,6 +1,6 @@
 use std::borrow::Borrow;
 
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Shape {
     Rock,
     Paper,
@@ -13,7 +13,7 @@ enum Outcome {
     Draw,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 struct Round {
     theirs: Shape,
     ours: Shape,
