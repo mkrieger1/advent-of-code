@@ -1,6 +1,6 @@
 use std::io;
 
-#[derive(Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 enum Shape {
     Rock,
     Paper,
@@ -19,8 +19,8 @@ struct Round {
     ours: Shape,
 }
 
-fn round_outcome(r: &Round) -> Outcome {
-    match (&r.theirs, &r.ours) {
+fn round_outcome(r: Round) -> Outcome {
+    match (r.theirs, r.ours) {
         (Shape::Rock, Shape::Paper)
         | (Shape::Paper, Shape::Scissors)
         | (Shape::Scissors, Shape::Rock) => Outcome::Win,
@@ -31,7 +31,7 @@ fn round_outcome(r: &Round) -> Outcome {
     }
 }
 
-fn outcome_score(outcome: &Outcome) -> i32 {
+fn outcome_score(outcome: Outcome) -> i32 {
     match outcome {
         Outcome::Win => 6,
         Outcome::Lose => 0,
@@ -39,7 +39,7 @@ fn outcome_score(outcome: &Outcome) -> i32 {
     }
 }
 
-fn shape_score(ours: &Shape) -> i32 {
+fn shape_score(ours: Shape) -> i32 {
     match ours {
         Shape::Rock => 1,
         Shape::Paper => 2,
@@ -84,7 +84,7 @@ fn parse_ours_part2(line_parts: &[&str]) -> Option<Outcome> {
 fn parse_round_part2(line_parts: &[&str]) -> Option<Round> {
     let theirs = parse_theirs(line_parts)?;
     let outcome = parse_ours_part2(line_parts)?;
-    let ours = match (&theirs, &outcome) {
+    let ours = match (theirs, outcome) {
         (Shape::Rock, Outcome::Draw)
         | (Shape::Paper, Outcome::Lose)
         | (Shape::Scissors, Outcome::Win) => Shape::Rock,
@@ -102,7 +102,7 @@ where
 {
     let parts: Vec<_> = line.split_whitespace().collect();
     if let Some(round) = parse_round(&parts) {
-        shape_score(&round.ours) + outcome_score(&round_outcome(&round))
+        shape_score(round.ours) + outcome_score(round_outcome(round))
     } else {
         0
     }
