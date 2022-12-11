@@ -1,7 +1,7 @@
 use std::borrow::Borrow;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-enum Shape {
+pub enum Shape {
     Rock,
     Paper,
     Scissors,
@@ -56,84 +56,73 @@ fn parse_theirs(line_parts: &[&str]) -> Option<Shape> {
     }
 }
 
-fn parse_ours_part1(line_parts: &[&str]) -> Option<Shape> {
-    match line_parts[..] {
-        [_, "X"] => Some(Shape::Rock),
-        [_, "Y"] => Some(Shape::Paper),
-        [_, "Z"] => Some(Shape::Scissors),
-        _ => None,
+pub trait ChooseOurs {
+    fn choose_ours(&self, line_parts: &[&str]) -> Option<Shape>;
+}
+
+pub struct Part1;
+
+impl ChooseOurs for Part1 {
+    fn choose_ours(&self, line_parts: &[&str]) -> Option<Shape> {
+        match line_parts[..] {
+            [_, "X"] => Some(Shape::Rock),
+            [_, "Y"] => Some(Shape::Paper),
+            [_, "Z"] => Some(Shape::Scissors),
+            _ => None,
+        }
     }
 }
 
-fn parse_round_part1(line_parts: &[&str]) -> Option<Round> {
-    Some(Round {
-        theirs: parse_theirs(line_parts)?,
-        ours: parse_ours_part1(line_parts)?,
-    })
-}
+pub struct Part2;
 
-fn parse_ours_part2(line_parts: &[&str]) -> Option<Outcome> {
-    match line_parts[..] {
-        [_, "X"] => Some(Outcome::Lose),
-        [_, "Y"] => Some(Outcome::Draw),
-        [_, "Z"] => Some(Outcome::Win),
-        _ => None,
+impl ChooseOurs for Part2 {
+    fn choose_ours(&self, line_parts: &[&str]) -> Option<Shape> {
+        let theirs = parse_theirs(line_parts)?;
+        let outcome = match line_parts[..] {
+            [_, "X"] => Some(Outcome::Lose),
+            [_, "Y"] => Some(Outcome::Draw),
+            [_, "Z"] => Some(Outcome::Win),
+            _ => None,
+        }?;
+        Some(match (theirs, outcome) {
+            (Shape::Rock, Outcome::Draw)
+            | (Shape::Paper, Outcome::Lose)
+            | (Shape::Scissors, Outcome::Win) => Shape::Rock,
+            (Shape::Rock, Outcome::Win)
+            | (Shape::Paper, Outcome::Draw)
+            | (Shape::Scissors, Outcome::Lose) => Shape::Paper,
+            _ => Shape::Scissors,
+        })
     }
 }
 
-fn parse_round_part2(line_parts: &[&str]) -> Option<Round> {
-    let theirs = parse_theirs(line_parts)?;
-    let outcome = parse_ours_part2(line_parts)?;
-    let ours = match (theirs, outcome) {
-        (Shape::Rock, Outcome::Draw)
-        | (Shape::Paper, Outcome::Lose)
-        | (Shape::Scissors, Outcome::Win) => Shape::Rock,
-        (Shape::Rock, Outcome::Win)
-        | (Shape::Paper, Outcome::Draw)
-        | (Shape::Scissors, Outcome::Lose) => Shape::Paper,
-        _ => Shape::Scissors,
-    };
-    Some(Round { theirs, ours })
+pub struct RockPaperScissors<S> {
+    pub strategy: S,
 }
 
-fn one_round<F>(line: &str, parse_round: F) -> i32
+impl<S> RockPaperScissors<S>
 where
-    F: Fn(&[&str]) -> Option<Round>,
+    S: ChooseOurs,
 {
-    let parts: Vec<_> = line.split_whitespace().collect();
-    if let Some(round) = parse_round(&parts) {
-        shape_score(round.ours) + outcome_score(round_outcome(round))
-    } else {
-        0
+    fn one_round(&self, line: &str) -> Option<i32> {
+        let parts: Vec<_> = line.split_whitespace().collect();
+        let round = Round {
+            theirs: parse_theirs(&parts)?,
+            ours: self.strategy.choose_ours(&parts)?,
+        };
+        Some(shape_score(round.ours) + outcome_score(round_outcome(round)))
     }
-}
 
-fn rock_paper_scissors<I, F>(input: I, parse_round: F) -> i32
-where
-    I: IntoIterator,
-    I::Item: Borrow<str>,
-    F: Fn(&[&str]) -> Option<Round>,
-{
-    input
-        .into_iter()
-        .map(|line| one_round(line.borrow(), &parse_round))
-        .sum()
-}
-
-pub fn rock_paper_scissors_part1<I>(input: I) -> i32
-where
-    I: IntoIterator,
-    I::Item: Borrow<str>,
-{
-    rock_paper_scissors(input, parse_round_part1)
-}
-
-pub fn rock_paper_scissors_part2<I>(input: I) -> i32
-where
-    I: IntoIterator,
-    I::Item: Borrow<str>,
-{
-    rock_paper_scissors(input, parse_round_part2)
+    pub fn play<I>(&self, input: I) -> i32
+    where
+        I: IntoIterator,
+        I::Item: Borrow<str>,
+    {
+        input
+            .into_iter()
+            .map(|line| self.one_round(line.borrow()).unwrap_or(0))
+            .sum()
+    }
 }
 
 #[cfg(test)]
@@ -148,37 +137,36 @@ mod tests {
 
     #[test]
     fn test_rock_paper_scissors_part1() {
-        assert_eq!(rock_paper_scissors_part1(EXAMPLE.lines()), 15);
+        let r = RockPaperScissors { strategy: Part1 };
+        assert_eq!(r.play(EXAMPLE.lines()), 15);
     }
 
     #[test]
     fn test_one_round_part1() {
-        assert_eq!(one_round("A Y", parse_round_part1), 8);
-        assert_eq!(one_round("B X", parse_round_part1), 1);
-        assert_eq!(one_round("C Z", parse_round_part1), 6);
+        let r = RockPaperScissors { strategy: Part1 };
+        assert_eq!(r.one_round("A Y").unwrap(), 8);
+        assert_eq!(r.one_round("B X").unwrap(), 1);
+        assert_eq!(r.one_round("C Z").unwrap(), 6);
     }
 
     #[test]
     fn test_rock_paper_scissors_part2() {
-        assert_eq!(rock_paper_scissors_part2(EXAMPLE.lines()), 12);
+        let r = RockPaperScissors { strategy: Part2 };
+        assert_eq!(r.play(EXAMPLE.lines()), 12);
     }
 
     #[test]
     fn test_one_round_part2() {
-        assert_eq!(one_round("A Y", parse_round_part2), 4);
-        assert_eq!(one_round("B X", parse_round_part2), 1);
-        assert_eq!(one_round("C Z", parse_round_part2), 7);
+        let r = RockPaperScissors { strategy: Part2 };
+        assert_eq!(r.one_round("A Y").unwrap(), 4);
+        assert_eq!(r.one_round("B X").unwrap(), 1);
+        assert_eq!(r.one_round("C Z").unwrap(), 7);
     }
 
     #[test]
     fn test_parse_round_part2_choose_scissors() {
         // they choose rock and we need to lose -> choose scissors
-        assert_eq!(
-            parse_round_part2(&["A", "X"]),
-            Some(Round {
-                theirs: Shape::Rock,
-                ours: Shape::Scissors
-            })
-        );
+        let strategy = Part2;
+        assert_eq!(strategy.choose_ours(&["A", "X"]), Some(Shape::Scissors));
     }
 }

@@ -1,11 +1,11 @@
 use std::error::Error;
-use std::io::BufRead;
 use std::io;
+use std::io::BufRead;
 
-use day2::rock_paper_scissors_part1;
+use day2::{Part1, RockPaperScissors};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let lines = io::stdin().lock().lines().filter_map(Result::ok);
-    println!("{}", rock_paper_scissors_part1(lines));
+    println!("{}", RockPaperScissors { strategy: Part1 }.play(lines));
     Ok(())
 }
