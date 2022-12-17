@@ -2,11 +2,7 @@ use std::borrow::Borrow;
 use std::collections::HashSet;
 
 fn priority_of_wrong_item(line: &str) -> i32 {
-    let line = line.trim();
     let n = line.len();
-    if n == 0 {
-        return 0;
-    }
     let first_compartment = HashSet::<_>::from_iter(line[..n / 2].bytes());
     let second_compartment = HashSet::<_>::from_iter(line[n / 2..].bytes());
     let wrong_item = first_compartment.intersection(&second_compartment).next();
@@ -31,7 +27,15 @@ where
 {
     input
         .into_iter()
-        .map(|line| priority_of_wrong_item(line.borrow()))
+        .filter_map(|line| {
+            let line = line.borrow().trim();
+            if line.is_empty() {
+                None
+            } else {
+                Some(line.to_string())
+            }
+        })
+        .map(|line| priority_of_wrong_item(&line))
         .sum()
 }
 
