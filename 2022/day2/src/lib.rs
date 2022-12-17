@@ -56,14 +56,14 @@ fn parse_theirs(line_parts: &[&str]) -> Option<Shape> {
     }
 }
 
-trait ChooseOurs {
-    fn choose_ours(&self, line_parts: &[&str]) -> Option<Shape>;
+trait Strategy {
+    fn choose_ours(line_parts: &[&str]) -> Option<Shape>;
 }
 
 struct Part1;
 
-impl ChooseOurs for Part1 {
-    fn choose_ours(&self, line_parts: &[&str]) -> Option<Shape> {
+impl Strategy for Part1 {
+    fn choose_ours(line_parts: &[&str]) -> Option<Shape> {
         match line_parts[..] {
             [_, "X"] => Some(Shape::Rock),
             [_, "Y"] => Some(Shape::Paper),
@@ -75,8 +75,8 @@ impl ChooseOurs for Part1 {
 
 struct Part2;
 
-impl ChooseOurs for Part2 {
-    fn choose_ours(&self, line_parts: &[&str]) -> Option<Shape> {
+impl Strategy for Part2 {
+    fn choose_ours(line_parts: &[&str]) -> Option<Shape> {
         let theirs = parse_theirs(line_parts)?;
         let outcome = match line_parts[..] {
             [_, "X"] => Some(Outcome::Lose),
@@ -96,33 +96,28 @@ impl ChooseOurs for Part2 {
     }
 }
 
-struct RockPaperScissors<S> {
-    strategy: S,
+fn one_round<S>(line: &str) -> Option<i32>
+where
+    S: Strategy,
+{
+    let parts: Vec<_> = line.split_whitespace().collect();
+    let round = Round {
+        theirs: parse_theirs(&parts)?,
+        ours: S::choose_ours(&parts)?,
+    };
+    Some(shape_score(round.ours) + outcome_score(round_outcome(round)))
 }
 
-impl<S> RockPaperScissors<S>
+fn play<I, S>(input: I) -> i32
 where
-    S: ChooseOurs,
+    I: IntoIterator,
+    I::Item: Borrow<str>,
+    S: Strategy,
 {
-    fn one_round(&self, line: &str) -> Option<i32> {
-        let parts: Vec<_> = line.split_whitespace().collect();
-        let round = Round {
-            theirs: parse_theirs(&parts)?,
-            ours: self.strategy.choose_ours(&parts)?,
-        };
-        Some(shape_score(round.ours) + outcome_score(round_outcome(round)))
-    }
-
-    fn play<I>(&self, input: I) -> i32
-    where
-        I: IntoIterator,
-        I::Item: Borrow<str>,
-    {
-        input
-            .into_iter()
-            .map(|line| self.one_round(line.borrow()).unwrap_or(0))
-            .sum()
-    }
+    input
+        .into_iter()
+        .map(|line| one_round::<S>(line.borrow()).unwrap_or(0))
+        .sum()
 }
 
 pub fn rock_paper_scissors_part1<I>(input: I) -> i32
@@ -130,8 +125,7 @@ where
     I: IntoIterator,
     I::Item: Borrow<str>,
 {
-    let r = RockPaperScissors { strategy: Part1 };
-    r.play(input)
+    play::<I, Part1>(input)
 }
 
 pub fn rock_paper_scissors_part2<I>(input: I) -> i32
@@ -139,8 +133,7 @@ where
     I: IntoIterator,
     I::Item: Borrow<str>,
 {
-    let r = RockPaperScissors { strategy: Part2 };
-    r.play(input)
+    play::<I, Part2>(input)
 }
 
 #[cfg(test)]
@@ -160,10 +153,9 @@ mod tests {
 
     #[test]
     fn test_one_round_part1() {
-        let r = RockPaperScissors { strategy: Part1 };
-        assert_eq!(r.one_round("A Y").unwrap(), 8);
-        assert_eq!(r.one_round("B X").unwrap(), 1);
-        assert_eq!(r.one_round("C Z").unwrap(), 6);
+        assert_eq!(one_round::<Part1>("A Y").unwrap(), 8);
+        assert_eq!(one_round::<Part1>("B X").unwrap(), 1);
+        assert_eq!(one_round::<Part1>("C Z").unwrap(), 6);
     }
 
     #[test]
@@ -173,16 +165,14 @@ mod tests {
 
     #[test]
     fn test_one_round_part2() {
-        let r = RockPaperScissors { strategy: Part2 };
-        assert_eq!(r.one_round("A Y").unwrap(), 4);
-        assert_eq!(r.one_round("B X").unwrap(), 1);
-        assert_eq!(r.one_round("C Z").unwrap(), 7);
+        assert_eq!(one_round::<Part2>("A Y").unwrap(), 4);
+        assert_eq!(one_round::<Part2>("B X").unwrap(), 1);
+        assert_eq!(one_round::<Part2>("C Z").unwrap(), 7);
     }
 
     #[test]
     fn test_parse_round_part2_choose_scissors() {
         // they choose rock and we need to lose -> choose scissors
-        let strategy = Part2;
-        assert_eq!(strategy.choose_ours(&["A", "X"]), Some(Shape::Scissors));
+        assert_eq!(Part2::choose_ours(&["A", "X"]), Some(Shape::Scissors));
     }
 }
