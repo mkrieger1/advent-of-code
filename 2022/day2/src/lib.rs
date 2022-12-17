@@ -20,13 +20,10 @@ struct Round {
 }
 
 fn round_outcome(r: Round) -> Outcome {
+    use Shape::*;
     match (r.theirs, r.ours) {
-        (Shape::Rock, Shape::Paper)
-        | (Shape::Paper, Shape::Scissors)
-        | (Shape::Scissors, Shape::Rock) => Outcome::Win,
-        (Shape::Rock, Shape::Scissors)
-        | (Shape::Paper, Shape::Rock)
-        | (Shape::Scissors, Shape::Paper) => Outcome::Lose,
+        (Rock, Paper) | (Paper, Scissors) | (Scissors, Rock) => Outcome::Win,
+        (Rock, Scissors) | (Paper, Rock) | (Scissors, Paper) => Outcome::Lose,
         _ => Outcome::Draw,
     }
 }
@@ -77,21 +74,19 @@ struct Part2;
 
 impl Strategy for Part2 {
     fn choose_ours(line_parts: &[&str]) -> Option<Shape> {
+        use Outcome::*;
+        use Shape::*;
         let theirs = parse_theirs(line_parts)?;
         let outcome = match line_parts[..] {
-            [_, "X"] => Some(Outcome::Lose),
-            [_, "Y"] => Some(Outcome::Draw),
-            [_, "Z"] => Some(Outcome::Win),
+            [_, "X"] => Some(Lose),
+            [_, "Y"] => Some(Draw),
+            [_, "Z"] => Some(Win),
             _ => None,
         }?;
         Some(match (theirs, outcome) {
-            (Shape::Rock, Outcome::Draw)
-            | (Shape::Paper, Outcome::Lose)
-            | (Shape::Scissors, Outcome::Win) => Shape::Rock,
-            (Shape::Rock, Outcome::Win)
-            | (Shape::Paper, Outcome::Draw)
-            | (Shape::Scissors, Outcome::Lose) => Shape::Paper,
-            _ => Shape::Scissors,
+            (Rock, Draw) | (Paper, Lose) | (Scissors, Win) => Rock,
+            (Rock, Win) | (Paper, Draw) | (Scissors, Lose) => Paper,
+            _ => Scissors,
         })
     }
 }
