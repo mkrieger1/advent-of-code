@@ -1,23 +1,25 @@
 use std::borrow::Borrow;
 use std::collections::HashSet;
 
-fn priority_of_wrong_item(line: &str) -> i32 {
+type Item = u8;
+
+fn wrong_item(line: &str) -> Item {
     let n = line.len();
     let first_compartment = HashSet::<_>::from_iter(line[..n / 2].bytes());
     let second_compartment = HashSet::<_>::from_iter(line[n / 2..].bytes());
-    let wrong_item = first_compartment.intersection(&second_compartment).next();
-    priority_of_item(*wrong_item.expect("at least one common item"))
+    let common = first_compartment.intersection(&second_compartment).next();
+    *common.expect("at least one common item")
 }
 
-fn priority_of_item(item: u8) -> i32 {
-    let offset = {
+fn priority_of_item(item: Item) -> i32 {
+    ({
         if item >= b'a' {
             item - b'a'
         } else {
             item - b'A' + 26
         }
-    };
-    (offset + 1).into()
+    } + 1)
+        .into()
 }
 
 pub fn rucksack_part1<I>(input: I) -> i32
@@ -35,7 +37,8 @@ where
                 Some(line.to_string())
             }
         })
-        .map(|line| priority_of_wrong_item(&line))
+        .map(|line| wrong_item(&line))
+        .map(priority_of_item)
         .sum()
 }
 
@@ -66,15 +69,20 @@ mod tests {
     }
 
     #[test]
-    fn test_priority_of_wrong_item() {
-        assert_eq!(priority_of_wrong_item("vJrwpWtwJgWrhcsFMMfFFhFp"), 16);
-        assert_eq!(
-            priority_of_wrong_item("jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL"),
-            38
-        );
-        assert_eq!(priority_of_wrong_item("PmmdzqPrVvPwwTWBwg"), 42);
-        assert_eq!(priority_of_wrong_item("wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn"), 22);
-        assert_eq!(priority_of_wrong_item("ttgJtRGJQctTZtZT"), 20);
-        assert_eq!(priority_of_wrong_item("CrZsJsPPZsGzwwsLwLmpwMDw"), 19);
+    fn test_priority_of_item() {
+        assert_eq!(priority_of_item(b'a'), 1);
+        assert_eq!(priority_of_item(b'z'), 26);
+        assert_eq!(priority_of_item(b'A'), 27);
+        assert_eq!(priority_of_item(b'Z'), 52);
+    }
+
+    #[test]
+    fn test_wrong_item() {
+        assert_eq!(wrong_item("vJrwpWtwJgWrhcsFMMfFFhFp"), b'p');
+        assert_eq!(wrong_item("jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL"), b'L');
+        assert_eq!(wrong_item("PmmdzqPrVvPwwTWBwg"), b'P');
+        assert_eq!(wrong_item("wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn"), b'v');
+        assert_eq!(wrong_item("ttgJtRGJQctTZtZT"), b't');
+        assert_eq!(wrong_item("CrZsJsPPZsGzwwsLwLmpwMDw"), b's');
     }
 }
