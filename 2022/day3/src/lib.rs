@@ -6,7 +6,7 @@ fn priority_of_wrong_item(line: &str) -> i32 {
     let first_compartment = HashSet::<_>::from_iter(line[..n / 2].bytes());
     let second_compartment = HashSet::<_>::from_iter(line[n / 2..].bytes());
     let wrong_item = first_compartment.intersection(&second_compartment).next();
-    priority_of_item(*wrong_item.unwrap())
+    priority_of_item(*wrong_item.expect("at least one common item"))
 }
 
 fn priority_of_item(item: u8) -> i32 {
