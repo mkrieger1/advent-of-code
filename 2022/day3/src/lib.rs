@@ -5,8 +5,8 @@ type Item = u8;
 
 fn wrong_item(line: &str) -> Item {
     let n = line.len();
-    let first_compartment = HashSet::<_>::from_iter(line[..n / 2].bytes());
-    let second_compartment = HashSet::<_>::from_iter(line[n / 2..].bytes());
+    let first_compartment: HashSet<Item> = line[..n / 2].bytes().collect();
+    let second_compartment: HashSet<Item> = line[n / 2..].bytes().collect();
     let common = first_compartment.intersection(&second_compartment).next();
     *common.expect("There should be one common item")
 }
