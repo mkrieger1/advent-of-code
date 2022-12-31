@@ -7,6 +7,7 @@ enum Shape {
     Scissors,
 }
 
+#[derive(Debug, PartialEq, Eq)]
 enum Outcome {
     Win,
     Lose,
@@ -15,17 +16,24 @@ enum Outcome {
 
 #[derive(Debug, PartialEq, Eq)]
 struct Round {
-    theirs: Shape,
     ours: Shape,
+    outcome: Outcome,
 }
 
-fn round_outcome(r: Round) -> Outcome {
+fn what_beats(s: Shape) -> Shape {
     use Shape::*;
-    match (r.theirs, r.ours) {
-        (Rock, Paper) | (Paper, Scissors) | (Scissors, Rock) => Outcome::Win,
-        (Rock, Scissors) | (Paper, Rock) | (Scissors, Paper) => Outcome::Lose,
-        _ => Outcome::Draw,
+    match s {
+        Rock => Paper,
+        Paper => Scissors,
+        Scissors => Rock,
     }
+}
+
+fn what_loses(s: Shape) -> Shape {
+    let other = what_beats(s);
+    let result = what_beats(other);
+    assert_eq!(what_beats(result), s);
+    result
 }
 
 fn outcome_score(outcome: Outcome) -> i32 {
@@ -54,40 +62,50 @@ fn parse_theirs(line_parts: &[&str]) -> Option<Shape> {
 }
 
 trait Strategy {
-    fn choose_ours(line_parts: &[&str]) -> Option<Shape>;
+    fn choose_ours(theirs: Shape, line_parts: &[&str]) -> Option<Round>;
 }
 
 struct Part1;
 
 impl Strategy for Part1 {
-    fn choose_ours(line_parts: &[&str]) -> Option<Shape> {
-        match line_parts[..] {
+    fn choose_ours(theirs: Shape, line_parts: &[&str]) -> Option<Round> {
+        let ours = match line_parts[..] {
             [_, "X"] => Some(Shape::Rock),
             [_, "Y"] => Some(Shape::Paper),
             [_, "Z"] => Some(Shape::Scissors),
             _ => None,
-        }
+        }?;
+        let outcome = {
+            if ours == what_beats(theirs) {
+                Outcome::Win
+            } else if ours == what_loses(theirs) {
+                Outcome::Lose
+            } else {
+                assert_eq!(ours, theirs);
+                Outcome::Draw
+            }
+        };
+        Some(Round { ours, outcome })
     }
 }
 
 struct Part2;
 
 impl Strategy for Part2 {
-    fn choose_ours(line_parts: &[&str]) -> Option<Shape> {
+    fn choose_ours(theirs: Shape, line_parts: &[&str]) -> Option<Round> {
         use Outcome::*;
-        use Shape::*;
-        let theirs = parse_theirs(line_parts)?;
         let outcome = match line_parts[..] {
             [_, "X"] => Some(Lose),
             [_, "Y"] => Some(Draw),
             [_, "Z"] => Some(Win),
             _ => None,
         }?;
-        Some(match (theirs, outcome) {
-            (Rock, Draw) | (Paper, Lose) | (Scissors, Win) => Rock,
-            (Rock, Win) | (Paper, Draw) | (Scissors, Lose) => Paper,
-            _ => Scissors,
-        })
+        let ours = match outcome {
+            Win => what_beats(theirs),
+            Lose => what_loses(theirs),
+            Draw => theirs,
+        };
+        Some(Round { ours, outcome })
     }
 }
 
@@ -96,11 +114,9 @@ where
     S: Strategy,
 {
     let parts: Vec<_> = line.split_whitespace().collect();
-    let round = Round {
-        theirs: parse_theirs(&parts)?,
-        ours: S::choose_ours(&parts)?,
-    };
-    Some(shape_score(round.ours) + outcome_score(round_outcome(round)))
+    let theirs = parse_theirs(&parts)?;
+    let round = S::choose_ours(theirs, &parts)?;
+    Some(shape_score(round.ours) + outcome_score(round.outcome))
 }
 
 fn play<I, S>(input: I) -> i32
@@ -168,6 +184,11 @@ mod tests {
     #[test]
     fn test_parse_round_part2_choose_scissors() {
         // they choose rock and we need to lose -> choose scissors
-        assert_eq!(Part2::choose_ours(&["A", "X"]), Some(Shape::Scissors));
+        let input = &["A", "X"];
+        let theirs = parse_theirs(input).unwrap();
+        assert_eq!(
+            Part2::choose_ours(theirs, input).unwrap().ours,
+            Shape::Scissors
+        );
     }
 }
