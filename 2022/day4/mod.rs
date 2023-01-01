@@ -31,12 +31,22 @@ fn parse_ranges(input: &str) -> Option<(Range, Range)> {
     Some((parse_range(parts[0])?, parse_range(parts[1])?))
 }
 
+fn one_range_contains_other(input: &str) -> Option<bool> {
+    let (first, second) = parse_ranges(input)?;
+    Some(first.contains(&second) || second.contains(&first))
+}
+
 pub fn cleanup_part1<I>(input: I) -> i32
 where
     I: IntoIterator,
     I::Item: Borrow<str>,
 {
-    todo!()
+    input
+        .into_iter()
+        .map(|line| {
+            one_range_contains_other(line.borrow()).unwrap_or_default() as i32
+        })
+        .sum()
 }
 
 pub fn cleanup_part2<I>(input: I) -> i32
