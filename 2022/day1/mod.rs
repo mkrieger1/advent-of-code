@@ -1,6 +1,9 @@
 use std::io;
 
-pub fn max_elf_calories<B: io::BufRead>(mut input: B) -> Result<i32, io::Error> {
+pub fn max_elf_calories<B>(mut input: B) -> Result<i32, io::Error>
+where
+    B: io::BufRead,
+{
     let mut raw_line = String::new();
     let mut elves: Vec<Vec<i32>> = Vec::new();
     let mut elf: Vec<i32> = Vec::new();
@@ -27,7 +30,10 @@ pub fn max_elf_calories<B: io::BufRead>(mut input: B) -> Result<i32, io::Error> 
         .unwrap_or(0))
 }
 
-pub fn top_3_elves_calories<B: io::BufRead>(mut input: B) -> Result<i32, io::Error> {
+pub fn top_3_elves_calories<B>(mut input: B) -> Result<i32, io::Error>
+where
+    B: io::BufRead,
+{
     let mut raw_line = String::new();
     let mut elves: Vec<Vec<i32>> = Vec::new();
     let mut elf: Vec<i32> = Vec::new();
@@ -48,7 +54,8 @@ pub fn top_3_elves_calories<B: io::BufRead>(mut input: B) -> Result<i32, io::Err
     elves.push(elf.clone());
 
     let top_calories = {
-        let mut calories: Vec<i32> = elves.iter().map(|elf| elf.iter().sum()).collect();
+        let mut calories: Vec<i32> =
+            elves.iter().map(|elf| elf.iter().sum()).collect();
         calories.sort_unstable();
         calories.reverse();
         calories
