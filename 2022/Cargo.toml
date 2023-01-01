@@ -38,6 +38,16 @@ name = "day3-part2"
 path = "day3/part2.rs"
 test = false
 
+[[bin]]
+name = "day4-part1"
+path = "day4/part1.rs"
+test = false
+
+[[bin]]
+name = "day4-part2"
+path = "day4/part2.rs"
+test = false
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
