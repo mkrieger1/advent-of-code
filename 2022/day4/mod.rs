@@ -115,7 +115,6 @@ mod tests {
         assert_eq!(ranges_overlap(EXAMPLE[3]), Some(true));
         assert_eq!(ranges_overlap(EXAMPLE[4]), Some(true));
         assert_eq!(ranges_overlap(EXAMPLE[5]), Some(true));
-        assert_eq!(ranges_overlap(EXAMPLE[5]), Some(true));
     }
 
     #[test]
