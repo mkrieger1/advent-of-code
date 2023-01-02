@@ -47,20 +47,30 @@ struct Range {
     end: u32,
 }
 
-impl Range {
-    pub fn full_overlap(&self, other: &Range) -> bool {
-        assert!(self.begin <= self.end);
-        assert!(other.begin <= other.end);
-        let a = self.begin >= other.begin;
-        let d = self.end > other.end;
+trait OverlapRule {
+    fn overlap(first: &Range, second: &Range) -> bool;
+}
+
+struct FullOverlap;
+
+impl OverlapRule for FullOverlap {
+    fn overlap(first: &Range, second: &Range) -> bool {
+        assert!(first.begin <= first.end);
+        assert!(second.begin <= second.end);
+        let a = first.begin >= second.begin;
+        let d = first.end > second.end;
         !a && d || a && !d
     }
+}
 
-    pub fn partial_overlap(&self, other: &Range) -> bool {
-        assert!(self.begin <= self.end);
-        assert!(other.begin <= other.end);
-        let b = self.begin > other.end;
-        let c = self.end >= other.begin;
+struct PartialOverlap;
+
+impl OverlapRule for PartialOverlap {
+    fn overlap(first: &Range, second: &Range) -> bool {
+        assert!(first.begin <= first.end);
+        assert!(second.begin <= second.end);
+        let b = first.begin > second.end;
+        let c = first.end >= second.begin;
         !b && c
     }
 }
@@ -84,14 +94,23 @@ fn parse_ranges(input: &str) -> Option<(Range, Range)> {
     Some((parse_range(parts[0])?, parse_range(parts[1])?))
 }
 
-fn parse_full_overlap(input: &str) -> Option<bool> {
+fn parse_and_overlap<R: OverlapRule>(input: &str) -> Option<bool> {
     let (first, second) = parse_ranges(input)?;
-    Some(first.full_overlap(&second))
+    Some(R::overlap(&first, &second))
 }
 
-fn parse_partial_overlap(input: &str) -> Option<bool> {
-    let (first, second) = parse_ranges(input)?;
-    Some(first.partial_overlap(&second))
+fn run<I, R>(input: I) -> i32
+where
+    I: IntoIterator,
+    I::Item: Borrow<str>,
+    R: OverlapRule,
+{
+    input
+        .into_iter()
+        .map(|line| {
+            parse_and_overlap::<R>(line.borrow()).unwrap_or_default() as i32
+        })
+        .sum()
 }
 
 pub fn cleanup_part1<I>(input: I) -> i32
@@ -99,12 +118,7 @@ where
     I: IntoIterator,
     I::Item: Borrow<str>,
 {
-    input
-        .into_iter()
-        .map(|line| {
-            parse_full_overlap(line.borrow()).unwrap_or_default() as i32
-        })
-        .sum()
+    run::<I, FullOverlap>(input)
 }
 
 pub fn cleanup_part2<I>(input: I) -> i32
@@ -112,12 +126,7 @@ where
     I: IntoIterator,
     I::Item: Borrow<str>,
 {
-    input
-        .into_iter()
-        .map(|line| {
-            parse_partial_overlap(line.borrow()).unwrap_or_default() as i32
-        })
-        .sum()
+    run::<I, PartialOverlap>(input)
 }
 
 #[cfg(test)]
@@ -135,12 +144,13 @@ mod tests {
 
     #[test]
     fn full_overlap_examples() {
-        assert_eq!(parse_full_overlap(EXAMPLE[0]), Some(false));
-        assert_eq!(parse_full_overlap(EXAMPLE[1]), Some(false));
-        assert_eq!(parse_full_overlap(EXAMPLE[2]), Some(false));
-        assert_eq!(parse_full_overlap(EXAMPLE[3]), Some(true));
-        assert_eq!(parse_full_overlap(EXAMPLE[4]), Some(true));
-        assert_eq!(parse_full_overlap(EXAMPLE[5]), Some(false));
+        let p = parse_and_overlap::<FullOverlap>;
+        assert_eq!(p(EXAMPLE[0]), Some(false));
+        assert_eq!(p(EXAMPLE[1]), Some(false));
+        assert_eq!(p(EXAMPLE[2]), Some(false));
+        assert_eq!(p(EXAMPLE[3]), Some(true));
+        assert_eq!(p(EXAMPLE[4]), Some(true));
+        assert_eq!(p(EXAMPLE[5]), Some(false));
     }
 
     #[test]
@@ -158,17 +168,19 @@ mod tests {
 
     #[test]
     fn partial_overlap_examples() {
-        assert_eq!(parse_partial_overlap(EXAMPLE[0]), Some(false));
-        assert_eq!(parse_partial_overlap(EXAMPLE[1]), Some(false));
-        assert_eq!(parse_partial_overlap(EXAMPLE[2]), Some(true));
-        assert_eq!(parse_partial_overlap(EXAMPLE[3]), Some(true));
-        assert_eq!(parse_partial_overlap(EXAMPLE[4]), Some(true));
-        assert_eq!(parse_partial_overlap(EXAMPLE[5]), Some(true));
+        let p = parse_and_overlap::<PartialOverlap>;
+        assert_eq!(p(EXAMPLE[0]), Some(false));
+        assert_eq!(p(EXAMPLE[1]), Some(false));
+        assert_eq!(p(EXAMPLE[2]), Some(true));
+        assert_eq!(p(EXAMPLE[3]), Some(true));
+        assert_eq!(p(EXAMPLE[4]), Some(true));
+        assert_eq!(p(EXAMPLE[5]), Some(true));
     }
 
     #[test]
     fn full_overlap_implies_partial() {
-        assert!(parse_partial_overlap("7-96,6-99").unwrap());
-        assert!(parse_partial_overlap("6-96,7-95").unwrap());
+        let p = parse_and_overlap::<PartialOverlap>;
+        assert!(p("7-96,6-99").unwrap());
+        assert!(p("6-96,7-95").unwrap());
     }
 }
