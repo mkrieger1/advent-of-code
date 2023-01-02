@@ -85,7 +85,7 @@ mod tests {
     }
 
     #[test]
-    fn contains_example() {
+    fn contains_examples() {
         assert_eq!(one_range_contains_other(EXAMPLE[0]), Some(false));
         assert_eq!(one_range_contains_other(EXAMPLE[1]), Some(false));
         assert_eq!(one_range_contains_other(EXAMPLE[2]), Some(false));
@@ -108,7 +108,7 @@ mod tests {
     }
 
     #[test]
-    fn overlap_example() {
+    fn overlap_examples() {
         assert_eq!(ranges_overlap(EXAMPLE[0]), Some(false));
         assert_eq!(ranges_overlap(EXAMPLE[1]), Some(false));
         assert_eq!(ranges_overlap(EXAMPLE[2]), Some(true));

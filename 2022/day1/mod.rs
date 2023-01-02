@@ -85,12 +85,12 @@ mod tests {
     ";
 
     #[test]
-    fn test_max_elf_calories() {
+    fn part1_example() {
         assert_eq!(max_elf_calories(EXAMPLE.as_bytes()).unwrap(), 24000);
     }
 
     #[test]
-    fn test_top_3_elves_calories() {
+    fn part2_example() {
         assert_eq!(top_3_elves_calories(EXAMPLE.as_bytes()).unwrap(), 45000);
     }
 }

@@ -107,12 +107,12 @@ mod tests {
     ];
 
     #[test]
-    fn test_rucksack_part1() {
+    fn part1_example() {
         assert_eq!(rucksack_part1(EXAMPLE), 157);
     }
 
     #[test]
-    fn test_priority_of_item() {
+    fn priority() {
         assert_eq!(priority_of_item(b'a'), 1);
         assert_eq!(priority_of_item(b'z'), 26);
         assert_eq!(priority_of_item(b'A'), 27);
@@ -120,7 +120,7 @@ mod tests {
     }
 
     #[test]
-    fn test_wrong_item() {
+    fn wrong_item_examples() {
         assert_eq!(wrong_item(EXAMPLE[0]), b'p');
         assert_eq!(wrong_item(EXAMPLE[1]), b'L');
         assert_eq!(wrong_item(EXAMPLE[2]), b'P');
@@ -130,13 +130,13 @@ mod tests {
     }
 
     #[test]
-    fn test_badge_items_in_groups() {
+    fn badge_items_examples() {
         let lines = EXAMPLE.iter().map(|s| s.to_string()).collect();
         assert_eq!(badge_items_in_groups(lines), [b'r', b'Z']);
     }
 
     #[test]
-    fn test_rucksack_part2() {
+    fn part2_example() {
         assert_eq!(rucksack_part2(EXAMPLE), 70);
     }
 }

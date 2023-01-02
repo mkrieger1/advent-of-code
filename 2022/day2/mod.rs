@@ -158,31 +158,31 @@ mod tests {
     ";
 
     #[test]
-    fn test_rock_paper_scissors_part1() {
+    fn part1_example() {
         assert_eq!(rock_paper_scissors_part1(EXAMPLE.lines()), 15);
     }
 
     #[test]
-    fn test_one_round_part1() {
+    fn part1_one_round() {
         assert_eq!(one_round::<Part1>("A Y").unwrap(), 8);
         assert_eq!(one_round::<Part1>("B X").unwrap(), 1);
         assert_eq!(one_round::<Part1>("C Z").unwrap(), 6);
     }
 
     #[test]
-    fn test_rock_paper_scissors_part2() {
+    fn part2_example() {
         assert_eq!(rock_paper_scissors_part2(EXAMPLE.lines()), 12);
     }
 
     #[test]
-    fn test_one_round_part2() {
+    fn part2_one_round() {
         assert_eq!(one_round::<Part2>("A Y").unwrap(), 4);
         assert_eq!(one_round::<Part2>("B X").unwrap(), 1);
         assert_eq!(one_round::<Part2>("C Z").unwrap(), 7);
     }
 
     #[test]
-    fn test_parse_round_part2_choose_scissors() {
+    fn part2_choose_scissors() {
         // they choose rock and we need to lose -> choose scissors
         let input = &["A", "X"];
         let theirs = parse_theirs(input).unwrap();
