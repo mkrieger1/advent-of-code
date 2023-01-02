@@ -1,5 +1,46 @@
 use std::borrow::Borrow;
 
+/*
+ *  assuming  P <= Q,  R <= S
+ *
+ *  a := P >= R  (=> c)
+ *  b := P >  S  (=> a, c, d)
+ *  c := Q >= R
+ *  d := Q >  S  (=> c)
+ *                                 overlap
+ *  a b c d       R       S        full partial
+ *  0 0 0 0   P Q |       |        0    0
+ *  0 0 0 1   -----invalid-----    .    .
+ *  0 0 1 0   P   |  Q    |        0    1
+ *  0 0 1 1   P   |       |   Q    1    1
+ *  0 1 0 0   -----invalid-----    .    .
+ *  0 1 0 1   -----invalid-----    .    .
+ *  0 1 1 0   -----invalid-----    .    .
+ *  0 1 1 1   -----invalid-----    .    .
+ *  1 0 0 0   -----invalid-----    .    .
+ *  1 0 0 1   -----invalid-----    .    .
+ *  1 0 1 0       |  P  Q |        1    1
+ *  1 0 1 1       |  P    |   Q    0    1
+ *  1 1 0 0   -----invalid-----    .    .
+ *  1 1 0 1   -----invalid-----    .    .
+ *  1 1 1 0   -----invalid-----    .    .
+ *  1 1 1 1       |       | P Q    0    0
+ *
+ *  Karnaugh maps:
+ *                 full      partial
+ *      b b
+ *    . . . .      0 . x x   0 . . .
+ *    . . . . d    x x . .   . . . .
+ *  c . . . . d    1 x 0 0   1 . 0 1
+ *  c . . . .      0 . x 1   1 . . 1
+ *        a a
+ *
+ *  "." = don't care => can assume 1 ("x")
+ *
+ *  => full = !a && d || a && !d
+ *     partial = !b && c
+ */
+
 #[derive(Debug, PartialEq)]
 struct Range {
     begin: u32,
@@ -7,14 +48,20 @@ struct Range {
 }
 
 impl Range {
-    pub fn contains(&self, other: &Range) -> bool {
-        self.begin <= other.begin && self.end >= other.end
+    pub fn full_overlap(&self, other: &Range) -> bool {
+        assert!(self.begin <= self.end);
+        assert!(other.begin <= other.end);
+        let a = self.begin >= other.begin;
+        let d = self.end > other.end;
+        !a && d || a && !d
     }
 
-    pub fn overlaps(&self, other: &Range) -> bool {
-        self.begin <= other.begin && self.end >= other.begin
-            || self.begin <= other.end && self.end >= other.end
-            || other.contains(&self)
+    pub fn partial_overlap(&self, other: &Range) -> bool {
+        assert!(self.begin <= self.end);
+        assert!(other.begin <= other.end);
+        let b = self.begin > other.end;
+        let c = self.end >= other.begin;
+        !b && c
     }
 }
 
@@ -37,14 +84,14 @@ fn parse_ranges(input: &str) -> Option<(Range, Range)> {
     Some((parse_range(parts[0])?, parse_range(parts[1])?))
 }
 
-fn one_range_contains_other(input: &str) -> Option<bool> {
+fn parse_full_overlap(input: &str) -> Option<bool> {
     let (first, second) = parse_ranges(input)?;
-    Some(first.contains(&second) || second.contains(&first))
+    Some(first.full_overlap(&second))
 }
 
-fn ranges_overlap(input: &str) -> Option<bool> {
+fn parse_partial_overlap(input: &str) -> Option<bool> {
     let (first, second) = parse_ranges(input)?;
-    Some(first.overlaps(&second))
+    Some(first.partial_overlap(&second))
 }
 
 pub fn cleanup_part1<I>(input: I) -> i32
@@ -55,7 +102,7 @@ where
     input
         .into_iter()
         .map(|line| {
-            one_range_contains_other(line.borrow()).unwrap_or_default() as i32
+            parse_full_overlap(line.borrow()).unwrap_or_default() as i32
         })
         .sum()
 }
@@ -67,7 +114,9 @@ where
 {
     input
         .into_iter()
-        .map(|line| ranges_overlap(line.borrow()).unwrap_or_default() as i32)
+        .map(|line| {
+            parse_partial_overlap(line.borrow()).unwrap_or_default() as i32
+        })
         .sum()
 }
 
@@ -85,13 +134,13 @@ mod tests {
     }
 
     #[test]
-    fn contains_examples() {
-        assert_eq!(one_range_contains_other(EXAMPLE[0]), Some(false));
-        assert_eq!(one_range_contains_other(EXAMPLE[1]), Some(false));
-        assert_eq!(one_range_contains_other(EXAMPLE[2]), Some(false));
-        assert_eq!(one_range_contains_other(EXAMPLE[3]), Some(true));
-        assert_eq!(one_range_contains_other(EXAMPLE[4]), Some(true));
-        assert_eq!(one_range_contains_other(EXAMPLE[5]), Some(false));
+    fn full_overlap_examples() {
+        assert_eq!(parse_full_overlap(EXAMPLE[0]), Some(false));
+        assert_eq!(parse_full_overlap(EXAMPLE[1]), Some(false));
+        assert_eq!(parse_full_overlap(EXAMPLE[2]), Some(false));
+        assert_eq!(parse_full_overlap(EXAMPLE[3]), Some(true));
+        assert_eq!(parse_full_overlap(EXAMPLE[4]), Some(true));
+        assert_eq!(parse_full_overlap(EXAMPLE[5]), Some(false));
     }
 
     #[test]
@@ -108,18 +157,18 @@ mod tests {
     }
 
     #[test]
-    fn overlap_examples() {
-        assert_eq!(ranges_overlap(EXAMPLE[0]), Some(false));
-        assert_eq!(ranges_overlap(EXAMPLE[1]), Some(false));
-        assert_eq!(ranges_overlap(EXAMPLE[2]), Some(true));
-        assert_eq!(ranges_overlap(EXAMPLE[3]), Some(true));
-        assert_eq!(ranges_overlap(EXAMPLE[4]), Some(true));
-        assert_eq!(ranges_overlap(EXAMPLE[5]), Some(true));
+    fn partial_overlap_examples() {
+        assert_eq!(parse_partial_overlap(EXAMPLE[0]), Some(false));
+        assert_eq!(parse_partial_overlap(EXAMPLE[1]), Some(false));
+        assert_eq!(parse_partial_overlap(EXAMPLE[2]), Some(true));
+        assert_eq!(parse_partial_overlap(EXAMPLE[3]), Some(true));
+        assert_eq!(parse_partial_overlap(EXAMPLE[4]), Some(true));
+        assert_eq!(parse_partial_overlap(EXAMPLE[5]), Some(true));
     }
 
     #[test]
-    fn overlap_if_contained() {
-        assert!(ranges_overlap("7-96,6-99").unwrap());
-        assert!(ranges_overlap("6-96,7-95").unwrap());
+    fn full_overlap_implies_partial() {
+        assert!(parse_partial_overlap("7-96,6-99").unwrap());
+        assert!(parse_partial_overlap("6-96,7-95").unwrap());
     }
 }
