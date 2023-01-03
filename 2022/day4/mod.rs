@@ -42,16 +42,16 @@ use std::borrow::Borrow;
  */
 
 #[derive(Debug, PartialEq)]
-struct Range {
+pub struct Range {
     begin: u32,
     end: u32,
 }
 
-trait OverlapRule {
+pub trait OverlapRule {
     fn overlap(first: &Range, second: &Range) -> bool;
 }
 
-struct FullOverlap;
+pub struct FullOverlap;
 
 impl OverlapRule for FullOverlap {
     fn overlap(first: &Range, second: &Range) -> bool {
@@ -63,7 +63,7 @@ impl OverlapRule for FullOverlap {
     }
 }
 
-struct PartialOverlap;
+pub struct PartialOverlap;
 
 impl OverlapRule for PartialOverlap {
     fn overlap(first: &Range, second: &Range) -> bool {
@@ -99,7 +99,7 @@ fn parse_and_overlap<R: OverlapRule>(input: &str) -> Option<bool> {
     Some(R::overlap(&first, &second))
 }
 
-fn run<I, R>(input: I) -> i32
+pub fn run<I, R>(input: I) -> i32
 where
     I: IntoIterator,
     I::Item: Borrow<str>,
@@ -113,22 +113,6 @@ where
         .sum()
 }
 
-pub fn cleanup_part1<I>(input: I) -> i32
-where
-    I: IntoIterator,
-    I::Item: Borrow<str>,
-{
-    run::<I, FullOverlap>(input)
-}
-
-pub fn cleanup_part2<I>(input: I) -> i32
-where
-    I: IntoIterator,
-    I::Item: Borrow<str>,
-{
-    run::<I, PartialOverlap>(input)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -139,7 +123,7 @@ mod tests {
 
     #[test]
     fn part1_example() {
-        assert_eq!(cleanup_part1(EXAMPLE), 2);
+        assert_eq!(run::<_, FullOverlap>(EXAMPLE), 2);
     }
 
     #[test]
@@ -163,7 +147,7 @@ mod tests {
 
     #[test]
     fn part2_example() {
-        assert_eq!(cleanup_part2(EXAMPLE), 4);
+        assert_eq!(run::<_, PartialOverlap>(EXAMPLE), 4);
     }
 
     #[test]
