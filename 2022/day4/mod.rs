@@ -109,7 +109,7 @@ where
     input
         .lines()
         .filter_map(|line| trimmed_not_blank(&line.ok()?))
-        .map(|line| parse_and_overlap::<R>(&line).unwrap_or_default() as i32)
+        .map(|line| parse_and_overlap::<R>(&line).unwrap_or(false) as i32)
         .sum()
 }
 
