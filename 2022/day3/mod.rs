@@ -29,14 +29,7 @@ where
 {
     input
         .into_iter()
-        .filter_map(|line| {
-            let line = line.borrow().trim();
-            if line.is_empty() {
-                None
-            } else {
-                Some(line.to_string())
-            }
-        })
+        .filter_map(|line| trimmed_not_blank(line.borrow()))
         .map(|line| wrong_item(&line))
         .map(priority_of_item)
         .sum()
@@ -77,20 +70,22 @@ where
 {
     let lines: Vec<String> = input
         .into_iter()
-        .filter_map(|line| {
-            let line = line.borrow().trim();
-            if line.is_empty() {
-                None
-            } else {
-                Some(line.to_string())
-            }
-        })
+        .filter_map(|line| trimmed_not_blank(line.borrow()))
         .collect();
 
     // TODO how to chain the iterators
     let badge_items = badge_items_in_groups(lines);
 
     badge_items.iter().map(|item| priority_of_item(*item)).sum()
+}
+
+fn trimmed_not_blank(line: &str) -> Option<String> {
+    let line = line.trim();
+    if line.is_empty() {
+        None
+    } else {
+        Some(line.to_string())
+    }
 }
 
 #[cfg(test)]
