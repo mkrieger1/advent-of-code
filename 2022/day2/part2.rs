@@ -1,7 +1,7 @@
 use std::io;
 
-use aoc::day2::rock_paper_scissors_part2;
+use aoc::day2::{play, OutcomeGiven};
 
 fn main() {
-    println!("{}", rock_paper_scissors_part2(io::stdin().lock()));
+    println!("{}", play::<_, OutcomeGiven>(io::stdin().lock()));
 }

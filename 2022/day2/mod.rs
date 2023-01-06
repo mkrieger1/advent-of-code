@@ -3,7 +3,7 @@ use std::io::BufRead;
 use crate::input::trimmed_not_blank;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-enum Shape {
+pub enum Shape {
     Rock,
     Paper,
     Scissors,
@@ -17,7 +17,7 @@ enum Outcome {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-struct Round {
+pub struct Round {
     ours: Shape,
     outcome: Outcome,
 }
@@ -63,13 +63,13 @@ fn parse_theirs(line_parts: &[&str]) -> Option<Shape> {
     }
 }
 
-trait Strategy {
+pub trait Strategy {
     fn choose_ours(theirs: Shape, line_parts: &[&str]) -> Option<Round>;
 }
 
-struct Part1;
+pub struct ShapeGiven;
 
-impl Strategy for Part1 {
+impl Strategy for ShapeGiven {
     fn choose_ours(theirs: Shape, line_parts: &[&str]) -> Option<Round> {
         let ours = match line_parts[..] {
             [_, "X"] => Some(Shape::Rock),
@@ -91,9 +91,9 @@ impl Strategy for Part1 {
     }
 }
 
-struct Part2;
+pub struct OutcomeGiven;
 
-impl Strategy for Part2 {
+impl Strategy for OutcomeGiven {
     fn choose_ours(theirs: Shape, line_parts: &[&str]) -> Option<Round> {
         use Outcome::*;
         let outcome = match line_parts[..] {
@@ -121,7 +121,7 @@ where
     Some(shape_score(round.ours) + outcome_score(round.outcome))
 }
 
-fn play<I, S>(input: I) -> i32
+pub fn play<I, S>(input: I) -> i32
 where
     I: BufRead,
     S: Strategy,
@@ -131,20 +131,6 @@ where
         .filter_map(|line| trimmed_not_blank(&line.ok()?))
         .map(|line| one_round::<S>(&line).unwrap_or(0))
         .sum()
-}
-
-pub fn rock_paper_scissors_part1<I>(input: I) -> i32
-where
-    I: BufRead,
-{
-    play::<I, Part1>(input)
-}
-
-pub fn rock_paper_scissors_part2<I>(input: I) -> i32
-where
-    I: BufRead,
-{
-    play::<I, Part2>(input)
 }
 
 #[cfg(test)]
@@ -159,26 +145,26 @@ mod tests {
 
     #[test]
     fn part1_example() {
-        assert_eq!(rock_paper_scissors_part1(EXAMPLE.as_bytes()), 15);
+        assert_eq!(play::<_, ShapeGiven>(EXAMPLE.as_bytes()), 15);
     }
 
     #[test]
     fn part1_one_round() {
-        assert_eq!(one_round::<Part1>("A Y").unwrap(), 8);
-        assert_eq!(one_round::<Part1>("B X").unwrap(), 1);
-        assert_eq!(one_round::<Part1>("C Z").unwrap(), 6);
+        assert_eq!(one_round::<ShapeGiven>("A Y").unwrap(), 8);
+        assert_eq!(one_round::<ShapeGiven>("B X").unwrap(), 1);
+        assert_eq!(one_round::<ShapeGiven>("C Z").unwrap(), 6);
     }
 
     #[test]
     fn part2_example() {
-        assert_eq!(rock_paper_scissors_part2(EXAMPLE.as_bytes()), 12);
+        assert_eq!(play::<_, OutcomeGiven>(EXAMPLE.as_bytes()), 12);
     }
 
     #[test]
     fn part2_one_round() {
-        assert_eq!(one_round::<Part2>("A Y").unwrap(), 4);
-        assert_eq!(one_round::<Part2>("B X").unwrap(), 1);
-        assert_eq!(one_round::<Part2>("C Z").unwrap(), 7);
+        assert_eq!(one_round::<OutcomeGiven>("A Y").unwrap(), 4);
+        assert_eq!(one_round::<OutcomeGiven>("B X").unwrap(), 1);
+        assert_eq!(one_round::<OutcomeGiven>("C Z").unwrap(), 7);
     }
 
     #[test]
@@ -187,7 +173,7 @@ mod tests {
         let input = &["A", "X"];
         let theirs = parse_theirs(input).unwrap();
         assert_eq!(
-            Part2::choose_ours(theirs, input).unwrap().ours,
+            OutcomeGiven::choose_ours(theirs, input).unwrap().ours,
             Shape::Scissors
         );
     }

@@ -101,7 +101,7 @@ fn parse_and_overlap<R: OverlapRule>(input: &str) -> Option<bool> {
     Some(R::overlap(&first, &second))
 }
 
-pub fn run<I, R>(input: I) -> i32
+pub fn count_overlaps<I, R>(input: I) -> i32
 where
     I: BufRead,
     R: OverlapRule,
@@ -128,7 +128,7 @@ mod tests {
 
     #[test]
     fn part1_example() {
-        assert_eq!(run::<_, FullOverlap>(EXAMPLE.as_bytes()), 2);
+        assert_eq!(count_overlaps::<_, FullOverlap>(EXAMPLE.as_bytes()), 2);
     }
 
     #[test]
@@ -159,7 +159,7 @@ mod tests {
 
     #[test]
     fn part2_example() {
-        assert_eq!(run::<_, PartialOverlap>(EXAMPLE.as_bytes()), 4);
+        assert_eq!(count_overlaps::<_, PartialOverlap>(EXAMPLE.as_bytes()), 4);
     }
 
     #[test]

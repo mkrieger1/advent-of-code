@@ -1,7 +1,8 @@
 use std::io;
 
-use aoc::day4::{run, FullOverlap};
+use aoc::day4::{count_overlaps, FullOverlap};
 
 fn main() {
-    println!("{}", run::<_, FullOverlap>(io::stdin().lock()));
+    let input = io::stdin().lock();
+    println!("{}", count_overlaps::<_, FullOverlap>(input));
 }
