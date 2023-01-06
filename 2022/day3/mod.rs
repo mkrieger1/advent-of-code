@@ -1,5 +1,5 @@
-use std::borrow::Borrow;
 use std::collections::HashSet;
+use std::io::BufRead;
 
 type Item = u8;
 
@@ -22,14 +22,10 @@ fn priority_of_item(item: Item) -> i32 {
         .into()
 }
 
-pub fn rucksack_part1<I>(input: I) -> i32
-where
-    I: IntoIterator,
-    I::Item: Borrow<str>,
-{
+pub fn rucksack_part1<I: BufRead>(input: I) -> i32 {
     input
-        .into_iter()
-        .filter_map(|line| trimmed_not_blank(line.borrow()))
+        .lines()
+        .filter_map(|line| trimmed_not_blank(&line.ok()?))
         .map(|line| wrong_item(&line))
         .map(priority_of_item)
         .sum()
@@ -63,14 +59,10 @@ fn badge_items_in_groups(lines: Vec<String>) -> Vec<Item> {
     badge_items
 }
 
-pub fn rucksack_part2<I>(input: I) -> i32
-where
-    I: IntoIterator,
-    I::Item: Borrow<str>,
-{
+pub fn rucksack_part2<I: BufRead>(input: I) -> i32 {
     let lines: Vec<String> = input
-        .into_iter()
-        .filter_map(|line| trimmed_not_blank(line.borrow()))
+        .lines()
+        .filter_map(|line| trimmed_not_blank(&line.ok()?))
         .collect();
 
     // TODO how to chain the iterators
@@ -92,18 +84,18 @@ fn trimmed_not_blank(line: &str) -> Option<String> {
 mod tests {
     use super::*;
 
-    const EXAMPLE: [&str; 6] = [
-        "vJrwpWtwJgWrhcsFMMfFFhFp",
-        "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
-        "PmmdzqPrVvPwwTWBwg",
-        "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn",
-        "ttgJtRGJQctTZtZT",
-        "CrZsJsPPZsGzwwsLwLmpwMDw",
-    ];
+    const EXAMPLE: &str = "
+        vJrwpWtwJgWrhcsFMMfFFhFp
+        jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+        PmmdzqPrVvPwwTWBwg
+        wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+        ttgJtRGJQctTZtZT
+        CrZsJsPPZsGzwwsLwLmpwMDw
+   ";
 
     #[test]
     fn part1_example() {
-        assert_eq!(rucksack_part1(EXAMPLE), 157);
+        assert_eq!(rucksack_part1(EXAMPLE.as_bytes()), 157);
     }
 
     #[test]
@@ -116,22 +108,25 @@ mod tests {
 
     #[test]
     fn wrong_item_examples() {
-        assert_eq!(wrong_item(EXAMPLE[0]), b'p');
-        assert_eq!(wrong_item(EXAMPLE[1]), b'L');
-        assert_eq!(wrong_item(EXAMPLE[2]), b'P');
-        assert_eq!(wrong_item(EXAMPLE[3]), b'v');
-        assert_eq!(wrong_item(EXAMPLE[4]), b't');
-        assert_eq!(wrong_item(EXAMPLE[5]), b's');
+        let lines: Vec<String> =
+            EXAMPLE.lines().filter_map(trimmed_not_blank).collect();
+        assert_eq!(wrong_item(&lines[0]), b'p');
+        assert_eq!(wrong_item(&lines[1]), b'L');
+        assert_eq!(wrong_item(&lines[2]), b'P');
+        assert_eq!(wrong_item(&lines[3]), b'v');
+        assert_eq!(wrong_item(&lines[4]), b't');
+        assert_eq!(wrong_item(&lines[5]), b's');
     }
 
     #[test]
     fn badge_items_examples() {
-        let lines = EXAMPLE.iter().map(|s| s.to_string()).collect();
+        let lines: Vec<String> =
+            EXAMPLE.lines().filter_map(trimmed_not_blank).collect();
         assert_eq!(badge_items_in_groups(lines), [b'r', b'Z']);
     }
 
     #[test]
     fn part2_example() {
-        assert_eq!(rucksack_part2(EXAMPLE), 70);
+        assert_eq!(rucksack_part2(EXAMPLE.as_bytes()), 70);
     }
 }
