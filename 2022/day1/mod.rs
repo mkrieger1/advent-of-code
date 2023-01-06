@@ -1,15 +1,15 @@
 use std::io;
 
-pub fn max_elf_calories<B>(mut input: B) -> Result<i32, io::Error>
+fn read_elves<B>(input: B) -> Result<Vec<Vec<i32>>, io::Error>
 where
     B: io::BufRead,
 {
-    let mut raw_line = String::new();
     let mut elves: Vec<Vec<i32>> = Vec::new();
     let mut elf: Vec<i32> = Vec::new();
 
-    while input.read_line(&mut raw_line)? != 0 {
-        let line = raw_line.trim();
+    for line in input.lines() {
+        let line = line?;
+        let line = line.trim();
         if line.is_empty() {
             if !elf.is_empty() {
                 elves.push(elf.clone());
@@ -19,40 +19,27 @@ where
             let value: i32 = line.parse().unwrap_or(0);
             elf.push(value);
         }
-        raw_line.clear();
     }
     elves.push(elf.clone());
+    Ok(elves)
+}
 
-    Ok(elves
+pub fn max_elf_calories<B>(input: B) -> Result<i32, io::Error>
+where
+    B: io::BufRead,
+{
+    Ok(read_elves(input)?
         .iter()
         .map(|elf| elf.iter().sum::<i32>())
         .max()
         .unwrap_or(0))
 }
 
-pub fn top_3_elves_calories<B>(mut input: B) -> Result<i32, io::Error>
+pub fn top_3_elves_calories<B>(input: B) -> Result<i32, io::Error>
 where
     B: io::BufRead,
 {
-    let mut raw_line = String::new();
-    let mut elves: Vec<Vec<i32>> = Vec::new();
-    let mut elf: Vec<i32> = Vec::new();
-
-    while input.read_line(&mut raw_line)? != 0 {
-        let line = raw_line.trim();
-        if line.is_empty() {
-            if !elf.is_empty() {
-                elves.push(elf.clone());
-                elf.clear();
-            }
-        } else {
-            let value: i32 = line.parse().unwrap_or(0);
-            elf.push(value);
-        }
-        raw_line.clear();
-    }
-    elves.push(elf.clone());
-
+    let elves = read_elves(input)?;
     let top_calories = {
         let mut calories: Vec<i32> =
             elves.iter().map(|elf| elf.iter().sum()).collect();
