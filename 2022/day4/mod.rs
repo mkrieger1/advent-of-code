@@ -1,4 +1,6 @@
-use std::borrow::Borrow;
+use std::io::BufRead;
+
+use crate::day3::trimmed_not_blank;  // TODO move somewhere else
 
 /*
  *  assuming  P <= Q,  R <= S
@@ -101,15 +103,13 @@ fn parse_and_overlap<R: OverlapRule>(input: &str) -> Option<bool> {
 
 pub fn run<I, R>(input: I) -> i32
 where
-    I: IntoIterator,
-    I::Item: Borrow<str>,
+    I: BufRead,
     R: OverlapRule,
 {
     input
-        .into_iter()
-        .map(|line| {
-            parse_and_overlap::<R>(line.borrow()).unwrap_or_default() as i32
-        })
+        .lines()
+        .filter_map(|line| trimmed_not_blank(&line.ok()?))
+        .map(|line| parse_and_overlap::<R>(&line).unwrap_or_default() as i32)
         .sum()
 }
 
@@ -117,48 +117,62 @@ where
 mod tests {
     use super::*;
 
-    const EXAMPLE: [&str; 6] = [
-        "2-4,6-8", "2-3,4-5", "5-7,7-9", "2-8,3-7", "6-6,4-6", "2-6,4-8",
-    ];
+    const EXAMPLE: &str = "
+        2-4,6-8
+        2-3,4-5
+        5-7,7-9
+        2-8,3-7
+        6-6,4-6
+        2-6,4-8
+    ";
 
     #[test]
     fn part1_example() {
-        assert_eq!(run::<_, FullOverlap>(EXAMPLE), 2);
+        assert_eq!(run::<_, FullOverlap>(EXAMPLE.as_bytes()), 2);
     }
 
     #[test]
     fn full_overlap_examples() {
         let p = parse_and_overlap::<FullOverlap>;
-        assert_eq!(p(EXAMPLE[0]), Some(false));
-        assert_eq!(p(EXAMPLE[1]), Some(false));
-        assert_eq!(p(EXAMPLE[2]), Some(false));
-        assert_eq!(p(EXAMPLE[3]), Some(true));
-        assert_eq!(p(EXAMPLE[4]), Some(true));
-        assert_eq!(p(EXAMPLE[5]), Some(false));
+        let lines: Vec<String> =
+            EXAMPLE.lines().filter_map(trimmed_not_blank).collect();
+        assert_eq!(p(&lines[0]), Some(false));
+        assert_eq!(p(&lines[1]), Some(false));
+        assert_eq!(p(&lines[2]), Some(false));
+        assert_eq!(p(&lines[3]), Some(true));
+        assert_eq!(p(&lines[4]), Some(true));
+        assert_eq!(p(&lines[5]), Some(false));
     }
 
     #[test]
     fn parse() {
+        let first_line = EXAMPLE
+            .lines()
+            .filter_map(trimmed_not_blank)
+            .next()
+            .unwrap();
         assert_eq!(
-            parse_ranges(EXAMPLE[0]),
+            parse_ranges(&first_line),
             Some((Range { begin: 2, end: 4 }, Range { begin: 6, end: 8 }))
         )
     }
 
     #[test]
     fn part2_example() {
-        assert_eq!(run::<_, PartialOverlap>(EXAMPLE), 4);
+        assert_eq!(run::<_, PartialOverlap>(EXAMPLE.as_bytes()), 4);
     }
 
     #[test]
     fn partial_overlap_examples() {
         let p = parse_and_overlap::<PartialOverlap>;
-        assert_eq!(p(EXAMPLE[0]), Some(false));
-        assert_eq!(p(EXAMPLE[1]), Some(false));
-        assert_eq!(p(EXAMPLE[2]), Some(true));
-        assert_eq!(p(EXAMPLE[3]), Some(true));
-        assert_eq!(p(EXAMPLE[4]), Some(true));
-        assert_eq!(p(EXAMPLE[5]), Some(true));
+        let lines: Vec<String> =
+            EXAMPLE.lines().filter_map(trimmed_not_blank).collect();
+        assert_eq!(p(&lines[0]), Some(false));
+        assert_eq!(p(&lines[1]), Some(false));
+        assert_eq!(p(&lines[2]), Some(true));
+        assert_eq!(p(&lines[3]), Some(true));
+        assert_eq!(p(&lines[4]), Some(true));
+        assert_eq!(p(&lines[5]), Some(true));
     }
 
     #[test]

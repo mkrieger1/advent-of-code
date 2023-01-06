@@ -72,7 +72,7 @@ pub fn rucksack_part2<I: BufRead>(input: I) -> i32 {
     badge_items.iter().map(|item| priority_of_item(*item)).sum()
 }
 
-fn trimmed_not_blank(line: &str) -> Option<String> {
+pub fn trimmed_not_blank(line: &str) -> Option<String> {
     let line = line.trim();
     if line.is_empty() {
         None
