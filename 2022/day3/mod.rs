@@ -31,9 +31,11 @@ pub fn rucksack_part1<I: BufRead>(input: I) -> i32 {
         .sum()
 }
 
-fn badge_items_in_groups(lines: Vec<String>) -> Vec<Item> {
+fn badge_items_in_groups<I>(mut lines: I) -> Vec<Item>
+where
+    I: Iterator<Item = String>,
+{
     let mut badge_items = Vec::new();
-    let mut lines = lines.iter();
     loop {
         // TODO factor out repeated code
         let mut candidates: HashSet<Item> = match lines.next() {
@@ -60,10 +62,9 @@ fn badge_items_in_groups(lines: Vec<String>) -> Vec<Item> {
 }
 
 pub fn rucksack_part2<I: BufRead>(input: I) -> i32 {
-    let lines: Vec<String> = input
+    let lines = input
         .lines()
-        .filter_map(|line| trimmed_not_blank(&line.ok()?))
-        .collect();
+        .filter_map(|line| trimmed_not_blank(&line.ok()?));
 
     // TODO how to chain the iterators
     let badge_items = badge_items_in_groups(lines);
@@ -120,8 +121,7 @@ mod tests {
 
     #[test]
     fn badge_items_examples() {
-        let lines: Vec<String> =
-            EXAMPLE.lines().filter_map(trimmed_not_blank).collect();
+        let lines = EXAMPLE.lines().filter_map(trimmed_not_blank);
         assert_eq!(badge_items_in_groups(lines), [b'r', b'Z']);
     }
 
