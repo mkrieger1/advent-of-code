@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 use std::io::BufRead;
 
+use crate::input::trimmed_not_blank;
+
 type Item = u8;
 
 fn wrong_item(line: &str) -> Item {
@@ -70,15 +72,6 @@ pub fn rucksack_part2<I: BufRead>(input: I) -> i32 {
     let badge_items = badge_items_in_groups(lines);
 
     badge_items.iter().map(|item| priority_of_item(*item)).sum()
-}
-
-pub fn trimmed_not_blank(line: &str) -> Option<String> {
-    let line = line.trim();
-    if line.is_empty() {
-        None
-    } else {
-        Some(line.to_string())
-    }
 }
 
 #[cfg(test)]

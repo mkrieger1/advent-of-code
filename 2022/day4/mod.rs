@@ -1,6 +1,6 @@
 use std::io::BufRead;
 
-use crate::day3::trimmed_not_blank;  // TODO move somewhere else
+use crate::input::trimmed_not_blank;
 
 /*
  *  assuming  P <= Q,  R <= S
