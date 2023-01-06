@@ -1,4 +1,6 @@
-use std::borrow::Borrow;
+use std::io::BufRead;
+
+use crate::day3::trimmed_not_blank; // TODO move somewhere else
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 enum Shape {
@@ -121,28 +123,26 @@ where
 
 fn play<I, S>(input: I) -> i32
 where
-    I: IntoIterator,
-    I::Item: Borrow<str>,
+    I: BufRead,
     S: Strategy,
 {
     input
-        .into_iter()
-        .map(|line| one_round::<S>(line.borrow()).unwrap_or(0))
+        .lines()
+        .filter_map(|line| trimmed_not_blank(&line.ok()?))
+        .map(|line| one_round::<S>(&line).unwrap_or(0))
         .sum()
 }
 
 pub fn rock_paper_scissors_part1<I>(input: I) -> i32
 where
-    I: IntoIterator,
-    I::Item: Borrow<str>,
+    I: BufRead,
 {
     play::<I, Part1>(input)
 }
 
 pub fn rock_paper_scissors_part2<I>(input: I) -> i32
 where
-    I: IntoIterator,
-    I::Item: Borrow<str>,
+    I: BufRead,
 {
     play::<I, Part2>(input)
 }
@@ -159,7 +159,7 @@ mod tests {
 
     #[test]
     fn part1_example() {
-        assert_eq!(rock_paper_scissors_part1(EXAMPLE.lines()), 15);
+        assert_eq!(rock_paper_scissors_part1(EXAMPLE.as_bytes()), 15);
     }
 
     #[test]
@@ -171,7 +171,7 @@ mod tests {
 
     #[test]
     fn part2_example() {
-        assert_eq!(rock_paper_scissors_part2(EXAMPLE.lines()), 12);
+        assert_eq!(rock_paper_scissors_part2(EXAMPLE.as_bytes()), 12);
     }
 
     #[test]
