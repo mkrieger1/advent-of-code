@@ -1,28 +1,28 @@
 use std::io;
 
-struct ReadElves<B> {
+struct BlankLinesSplit<B> {
     lines: std::io::Lines<B>,
 }
 
-impl<B> ReadElves<B>
+impl<B> BlankLinesSplit<B>
 where
     B: io::BufRead,
 {
-    fn new(input: B) -> ReadElves<B> {
-        ReadElves {
+    fn new(input: B) -> BlankLinesSplit<B> {
+        BlankLinesSplit {
             lines: input.lines(),
         }
     }
 }
 
-impl<B> Iterator for ReadElves<B>
+impl<B> Iterator for BlankLinesSplit<B>
 where
     B: io::BufRead,
 {
-    type Item = Vec<i32>;
+    type Item = Vec<String>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let mut elf: Vec<i32> = Vec::new();
+        let mut part: Vec<String> = Vec::new();
         for line in &mut self.lines {
             let line = match line {
                 Err(_) => break,
@@ -30,24 +30,30 @@ where
             };
             let line = line.trim();
             if !line.is_empty() {
-                let value: i32 = line.parse().unwrap_or(0);
-                elf.push(value);
+                part.push(line.to_string());
                 continue;
             }
-            if !elf.is_empty() {
-                return Some(elf);
+            if !part.is_empty() {
+                return Some(part);
             }
         }
-        Some(elf).filter(|elf| !elf.is_empty())
+        Some(part).filter(|part| !part.is_empty())
     }
+}
+
+fn elf_calories(lines: Vec<String>) -> i32 {
+    lines
+        .iter()
+        .map(|line| line.parse::<i32>().unwrap_or(0))
+        .sum()
 }
 
 pub fn max_elf_calories<B>(input: B) -> i32
 where
     B: io::BufRead,
 {
-    ReadElves::new(input)
-        .map(|elf| elf.iter().sum::<i32>())
+    BlankLinesSplit::new(input)
+        .map(elf_calories)
         .max()
         .unwrap_or(0)
 }
@@ -56,10 +62,9 @@ pub fn top_3_elves_calories<B>(input: B) -> i32
 where
     B: io::BufRead,
 {
-    let elves = ReadElves::new(input);
+    let parts = BlankLinesSplit::new(input);
     let top_calories = {
-        let mut calories: Vec<i32> =
-            elves.map(|elf| elf.iter().sum()).collect();
+        let mut calories: Vec<i32> = parts.map(elf_calories).collect();
         calories.sort_unstable();
         calories.reverse();
         calories
@@ -90,30 +95,31 @@ mod tests {
 
     #[test]
     fn read_lines() {
-        let read =
-            |input| -> Vec<Vec<i32>> { ReadElves::new(input).collect() };
-        assert_eq!(read("".as_bytes()), [] as [Vec<i32>; 0]);
-        assert_eq!(read("1".as_bytes()), vec![[1]]);
-        assert_eq!(read("1\n".as_bytes()), vec![[1]]);
-        assert_eq!(read("1\n2".as_bytes()), vec![[1, 2]]);
-        assert_eq!(read("1\n2\n".as_bytes()), vec![[1, 2]]);
-        assert_eq!(read("1\n2\n\n".as_bytes()), vec![[1, 2]]);
-        assert_eq!(read("1\n\n".as_bytes()), vec![[1]]);
-        assert_eq!(read("1\n\n2".as_bytes()), vec![[1], [2]]);
-        assert_eq!(read("1\n\n2\n".as_bytes()), vec![[1], [2]]);
-        assert_eq!(read("1\n\n2\n\n".as_bytes()), vec![[1], [2]]);
-        assert_eq!(read("1\n\n\n2\n".as_bytes()), vec![[1], [2]]);
-        assert_eq!(read("\n".as_bytes()), [] as [Vec<i32>; 0]);
-        assert_eq!(read("\n1".as_bytes()), vec![[1]]);
-        assert_eq!(read("\n1\n".as_bytes()), vec![[1]]);
-        assert_eq!(read("\n1\n2".as_bytes()), vec![[1, 2]]);
-        assert_eq!(read("\n1\n2\n".as_bytes()), vec![[1, 2]]);
-        assert_eq!(read("\n1\n\n2".as_bytes()), vec![[1], [2]]);
-        assert_eq!(read("\n1\n\n2\n".as_bytes()), vec![[1], [2]]);
-        assert_eq!(read("\n1\n\n2\n\n".as_bytes()), vec![[1], [2]]);
-        assert_eq!(read("\n\n".as_bytes()), [] as [Vec<i32>; 0]);
-        assert_eq!(read("\n\n1".as_bytes()), vec![[1]]);
-        assert_eq!(read("\n\n1\n".as_bytes()), vec![[1]]);
+        let read = |input| -> Vec<Vec<String>> {
+            BlankLinesSplit::new(input).collect()
+        };
+        assert_eq!(read("".as_bytes()), [] as [Vec<String>; 0]);
+        assert_eq!(read("1".as_bytes()), vec![["1"]]);
+        assert_eq!(read("1\n".as_bytes()), vec![["1"]]);
+        assert_eq!(read("1\n2".as_bytes()), vec![["1", "2"]]);
+        assert_eq!(read("1\n2\n".as_bytes()), vec![["1", "2"]]);
+        assert_eq!(read("1\n2\n\n".as_bytes()), vec![["1", "2"]]);
+        assert_eq!(read("1\n\n".as_bytes()), vec![["1"]]);
+        assert_eq!(read("1\n\n2".as_bytes()), vec![["1"], ["2"]]);
+        assert_eq!(read("1\n\n2\n".as_bytes()), vec![["1"], ["2"]]);
+        assert_eq!(read("1\n\n2\n\n".as_bytes()), vec![["1"], ["2"]]);
+        assert_eq!(read("1\n\n\n2\n".as_bytes()), vec![["1"], ["2"]]);
+        assert_eq!(read("\n".as_bytes()), [] as [Vec<String>; 0]);
+        assert_eq!(read("\n1".as_bytes()), vec![["1"]]);
+        assert_eq!(read("\n1\n".as_bytes()), vec![["1"]]);
+        assert_eq!(read("\n1\n2".as_bytes()), vec![["1", "2"]]);
+        assert_eq!(read("\n1\n2\n".as_bytes()), vec![["1", "2"]]);
+        assert_eq!(read("\n1\n\n2".as_bytes()), vec![["1"], ["2"]]);
+        assert_eq!(read("\n1\n\n2\n".as_bytes()), vec![["1"], ["2"]]);
+        assert_eq!(read("\n1\n\n2\n\n".as_bytes()), vec![["1"], ["2"]]);
+        assert_eq!(read("\n\n".as_bytes()), [] as [Vec<String>; 0]);
+        assert_eq!(read("\n\n1".as_bytes()), vec![["1"]]);
+        assert_eq!(read("\n\n1\n".as_bytes()), vec![["1"]]);
     }
 
     #[test]
