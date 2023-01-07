@@ -13,14 +13,14 @@ where
             Ok(line) => line,
         };
         let line = line.trim();
-        if line.is_empty() {
-            if !elf.is_empty() {
-                elves.push(elf.clone());
-                elf.clear();
-            }
-        } else {
+        if !line.is_empty() {
             let value: i32 = line.parse().unwrap_or(0);
             elf.push(value);
+            continue;
+        }
+        if !elf.is_empty() {
+            elves.push(elf.clone());
+            elf.clear();
         }
     }
     if !elf.is_empty() {
