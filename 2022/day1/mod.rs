@@ -66,10 +66,9 @@ where
     let top_calories = {
         let mut calories: Vec<i32> = parts.map(elf_calories).collect();
         calories.sort_unstable();
-        calories.reverse();
         calories
     };
-    top_calories.iter().take(3).sum()
+    top_calories.iter().rev().take(3).sum()
 }
 
 #[cfg(test)]
