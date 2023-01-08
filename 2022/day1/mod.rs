@@ -23,7 +23,9 @@ where
             elf.push(value);
         }
     }
-    elves.push(elf.clone());
+    if !elf.is_empty() {
+        elves.push(elf.clone());
+    }
     elves
 }
 
@@ -73,6 +75,32 @@ mod tests {
 
     10000
     ";
+
+    #[test]
+    fn read_lines() {
+        assert_eq!(read_elves("".as_bytes()), [] as [Vec<i32>; 0]);
+        assert_eq!(read_elves("1".as_bytes()), vec![[1]]);
+        assert_eq!(read_elves("1\n".as_bytes()), vec![[1]]);
+        assert_eq!(read_elves("1\n2".as_bytes()), vec![[1, 2]]);
+        assert_eq!(read_elves("1\n2\n".as_bytes()), vec![[1, 2]]);
+        assert_eq!(read_elves("1\n2\n\n".as_bytes()), vec![[1, 2]]);
+        assert_eq!(read_elves("1\n\n".as_bytes()), vec![[1]]);
+        assert_eq!(read_elves("1\n\n2".as_bytes()), vec![[1], [2]]);
+        assert_eq!(read_elves("1\n\n2\n".as_bytes()), vec![[1], [2]]);
+        assert_eq!(read_elves("1\n\n2\n\n".as_bytes()), vec![[1], [2]]);
+        assert_eq!(read_elves("1\n\n\n2\n".as_bytes()), vec![[1], [2]]);
+        assert_eq!(read_elves("\n".as_bytes()), [] as [Vec<i32>; 0]);
+        assert_eq!(read_elves("\n1".as_bytes()), vec![[1]]);
+        assert_eq!(read_elves("\n1\n".as_bytes()), vec![[1]]);
+        assert_eq!(read_elves("\n1\n2".as_bytes()), vec![[1, 2]]);
+        assert_eq!(read_elves("\n1\n2\n".as_bytes()), vec![[1, 2]]);
+        assert_eq!(read_elves("\n1\n\n2".as_bytes()), vec![[1], [2]]);
+        assert_eq!(read_elves("\n1\n\n2\n".as_bytes()), vec![[1], [2]]);
+        assert_eq!(read_elves("\n1\n\n2\n\n".as_bytes()), vec![[1], [2]]);
+        assert_eq!(read_elves("\n\n".as_bytes()), [] as [Vec<i32>; 0]);
+        assert_eq!(read_elves("\n\n1".as_bytes()), vec![[1]]);
+        assert_eq!(read_elves("\n\n1\n".as_bytes()), vec![[1]]);
+    }
 
     #[test]
     fn part1_example() {
