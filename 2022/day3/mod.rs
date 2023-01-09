@@ -4,6 +4,24 @@ use std::io::BufRead;
 use crate::input::trimmed_not_blank;
 
 type Item = u8;
+type Group = [String; 3];
+
+struct GroupLines<I> {
+    lines: I,
+}
+
+impl<I> Iterator for GroupLines<I>
+where
+    I: Iterator<Item = String>,
+{
+    type Item = Group;
+
+    fn next(&mut self) -> Option<Group> {
+        let lines = &mut self.lines;
+        let result: Vec<String> = lines.take(3).collect();
+        result.try_into().ok()
+    }
+}
 
 fn wrong_item(line: &str) -> Item {
     let n = line.len();
@@ -33,34 +51,17 @@ pub fn rucksack_part1<I: BufRead>(input: I) -> i32 {
         .sum()
 }
 
-fn badge_items_in_groups<I>(mut lines: I) -> Vec<Item>
-where
-    I: Iterator<Item = String>,
-{
-    let mut badge_items = Vec::new();
-    loop {
-        // TODO factor out repeated code
-        let mut candidates: HashSet<Item> = match lines.next() {
-            None => break,
-            Some(line) => line.bytes().collect(),
-        };
+fn common_item_in_group(group: &Group) -> Item {
+    let mut candidates: HashSet<Item> = group[0].bytes().collect();
+    let line2: HashSet<Item> = group[1].bytes().collect();
 
-        let line2: HashSet<Item> = match lines.next() {
-            None => break,
-            Some(line) => line.bytes().collect(),
-        };
-        // TODO try https://stackoverflow.com/a/55977965/
-        candidates = candidates.intersection(&line2).cloned().collect();
+    // TODO try https://stackoverflow.com/a/55977965/
+    candidates = candidates.intersection(&line2).cloned().collect();
 
-        let line3: HashSet<Item> = match lines.next() {
-            None => break,
-            Some(line) => line.bytes().collect(),
-        };
-        let common = candidates.intersection(&line3).next();
+    let line3: HashSet<Item> = group[2].bytes().collect();
+    let common = candidates.intersection(&line3).next();
 
-        badge_items.push(*common.expect("There should be one common item"));
-    }
-    badge_items
+    *common.expect("There should be one common item")
 }
 
 pub fn rucksack_part2<I: BufRead>(input: I) -> i32 {
@@ -68,10 +69,10 @@ pub fn rucksack_part2<I: BufRead>(input: I) -> i32 {
         .lines()
         .filter_map(|line| trimmed_not_blank(&line.ok()?));
 
-    // TODO how to chain the iterators
-    let badge_items = badge_items_in_groups(lines);
-
-    badge_items.iter().map(|item| priority_of_item(*item)).sum()
+    GroupLines { lines }
+        .map(|g| common_item_in_group(&g))
+        .map(priority_of_item)
+        .sum()
 }
 
 #[cfg(test)]
@@ -115,7 +116,9 @@ mod tests {
     #[test]
     fn badge_items_examples() {
         let lines = EXAMPLE.lines().filter_map(trimmed_not_blank);
-        assert_eq!(badge_items_in_groups(lines), [b'r', b'Z']);
+        let groups: Vec<Group> = GroupLines { lines }.collect();
+        assert_eq!(common_item_in_group(&groups[0]), b'r');
+        assert_eq!(common_item_in_group(&groups[1]), b'Z');
     }
 
     #[test]
