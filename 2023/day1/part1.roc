@@ -1,15 +1,21 @@
 app "day1-part1-hello"
-    packages { pf: "https://github.com/roc-lang/basic-cli/releases/download/0.5.0/Cufzl36_SnJ4QbOoEmiJ5dIpUxBvdB3NEySvuH82Wio.tar.br" }
+    packages {
+        pf: "https://github.com/roc-lang/basic-cli/releases/download/0.7.0/bkGby8jb0tmZYsy2hg1E_B2QrCgcSTxdUlHtETwm5m4.tar.br",
+    }
     imports [pf.Stdout, pf.Stdin, pf.Task.{ await }]
     provides [main] to pf
 
 main =
     # TODO loop until EOF
-    line <- await Stdin.line
+    read <- await Stdin.line
     answer =
-        when twoDigitNumber line is
-            Ok n -> Num.toStr n
-            Err NoDigit -> "Invalid input: no digits found"
+        when read is
+            Input line ->
+                when twoDigitNumber line is
+                    Ok n -> Num.toStr n
+                    Err NoDigit -> "Invalid input: no digits found"
+
+            End -> "eof"
     Stdout.line answer
 
 isScalarDigit : U32 -> Bool
