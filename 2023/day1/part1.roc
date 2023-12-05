@@ -10,7 +10,12 @@ main =
         read <- await Stdin.line
         when read is
             Input line ->
-                sum + (twoDigitNumber line |> Result.withDefault 0)
+                sum
+                + (
+                    twoDigitNumber line
+                    |> Result.withDefault 0
+                    |> Num.toNat
+                )
                 |> Step
                 |> Task.ok
 
