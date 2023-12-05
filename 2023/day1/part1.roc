@@ -69,12 +69,11 @@ firstAndLastDigit = \line ->
 
 twoDigitNumber : Str -> Result U8 [NoDigit]
 twoDigitNumber = \line ->
-    toNumber = \digits ->
+    firstAndLastDigit line
+    |> Result.map \digits ->
         when Str.toU8 digits is
             Ok n -> n
             Err InvalidNumStr -> crash "two digits to U8 failed"
-    firstAndLastDigit line
-    |> Result.map toNumber
 
 expect firstDigit "1abc2" == Ok "1"
 expect firstDigit "pqr3stu8vwx" == Ok "3"
