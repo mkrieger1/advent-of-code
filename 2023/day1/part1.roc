@@ -21,7 +21,7 @@ main =
 isScalarDigit : U32 -> Bool
 isScalarDigit = \scalar ->
     digit0 = 48
-    scalar >= digit0 && scalar <= digit0 + 10
+    scalar >= digit0 && scalar < digit0 + 10
 
 MaybeDigit : [NoDigit, Digit U32]
 
@@ -99,3 +99,8 @@ expect twoDigitNumber "pqr3stu8vwx" == Ok 38
 expect twoDigitNumber "pqr3stu" == Ok 33
 expect twoDigitNumber "hello" == Err NoDigit
 expect twoDigitNumber "" == Err NoDigit
+
+expect "/" |> Str.toScalars |> List.map isScalarDigit == [Bool.false]
+expect "0" |> Str.toScalars |> List.map isScalarDigit == [Bool.true]
+expect "9" |> Str.toScalars |> List.map isScalarDigit == [Bool.true]
+expect ":" |> Str.toScalars |> List.map isScalarDigit == [Bool.false]
