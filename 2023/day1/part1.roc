@@ -6,22 +6,18 @@ app "day1-part1-hello"
     provides [main] to pf
 
 main =
-    Task.loop {} \_ ->
+    Task.loop 0 \sum ->
         read <- await Stdin.line
         when read is
             Input line ->
-                when twoDigitNumber line is
-                    Ok n ->
-                        Num.toStr n
-                        |> Stdout.line
-                        |> Task.map Step
+                sum + (twoDigitNumber line |> Result.withDefault 0)
+                |> Step
+                |> Task.ok
 
-                    Err NoDigit ->
-                        "Invalid input: no digits found"
-                        |> Stdout.line
-                        |> Task.map Step
-
-            End -> Task.ok (Done {})
+            End ->
+                Num.toStr sum
+                |> Stdout.line
+                |> Task.map Done
 
 isScalarDigit : U32 -> Bool
 isScalarDigit = \scalar ->
