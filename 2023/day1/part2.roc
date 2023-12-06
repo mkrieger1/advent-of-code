@@ -24,62 +24,104 @@ main =
                 |> Stdout.line
                 |> Task.map Done
 
-isScalarDigit : U32 -> Bool
-isScalarDigit = \scalar ->
-    digit0 = 48
-    scalar >= digit0 && scalar < digit0 + 10
+digitMap = [
+    ("1", 1),
+    ("2", 2),
+    ("3", 3),
+    ("4", 4),
+    ("5", 5),
+    ("6", 6),
+    ("7", 7),
+    ("8", 8),
+    ("9", 9),
+    ("one", 1),
+    ("two", 2),
+    ("three", 3),
+    ("four", 4),
+    ("five", 5),
+    ("six", 6),
+    ("seven", 7),
+    ("eight", 8),
+    ("nine", 9),
+]
 
-MaybeDigit : [NoDigit, Digit U32]
+strStartsWithDigit = \s ->
+    List.walkUntil digitMap (Err NoDigit) \state, (pattern, digit) ->
+        if s |> Str.startsWith pattern then
+            Break (Ok digit)
+        else
+            Continue state
 
-walkUntilDigit :
-    MaybeDigit,
-    U32
-    -> [
-        Break [Digit U32],
-        Continue MaybeDigit,
-    ]
-walkUntilDigit = \state, scalar ->
-    if isScalarDigit scalar then
-        Break (Digit scalar)
-    else
-        Continue state
+strEndsWithDigit = \s ->
+    List.walkUntil digitMap (Err NoDigit) \state, (pattern, digit) ->
+        if s |> Str.endsWith pattern then
+            Break (Ok digit)
+        else
+            Continue state
 
-digitToStr : U32 -> Str
-digitToStr = \scalar ->
+scalarToStr : U32 -> Str
+scalarToStr = \scalar ->
     when Str.appendScalar "" scalar is
         Ok s -> s
         Err InvalidScalar -> crash "invalid scalar"
 
-maybeDigitToStr : MaybeDigit -> Result Str [NoDigit]
-maybeDigitToStr = \m ->
-    when m is
-        Digit scalar -> Ok (digitToStr scalar)
-        NoDigit -> Err NoDigit
+strFromScalars = \scalars ->
+    scalars |> List.map scalarToStr |> Str.joinWith ""
 
-firstDigit : Str -> Result Str [NoDigit]
+strLen = \s ->
+    s |> Str.toScalars |> List.len
+
+takeFirst = \s, n ->
+    s
+    |> Str.toScalars
+    |> List.takeFirst n
+    |> strFromScalars
+
+expect takeFirst "1abc2" 5 == "1abc2"
+expect takeFirst "1abc2" 4 == "1abc"
+expect takeFirst "1abc2" 1 == "1"
+expect takeFirst "1abc2" 0 == ""
+
+takeLast = \s, n ->
+    s
+    |> Str.toScalars
+    |> List.takeLast n
+    |> strFromScalars
+
+expect takeLast "1abc2" 5 == "1abc2"
+expect takeLast "1abc2" 4 == "abc2"
+expect takeLast "1abc2" 1 == "2"
+expect takeLast "1abc2" 0 == ""
+
+firstDigit : Str -> Result U8 [NoDigit]
 firstDigit = \line ->
-    Str.walkScalarsUntil line NoDigit walkUntilDigit
-    |> maybeDigitToStr
+    List.range { start: At (strLen line), end: At 1 }
+    |> List.walkUntil (Err NoDigit) \state, i ->
+        when line |> takeLast i |> strStartsWithDigit is
+            Ok d -> Break (Ok d)
+            _ -> Continue state
 
-lastDigit : Str -> Result Str [NoDigit]
+lastDigit : Str -> Result U8 [NoDigit]
 lastDigit = \line ->
-    scalars = Str.toScalars line
-    List.walkBackwardsUntil scalars NoDigit walkUntilDigit
-    |> maybeDigitToStr
-
-firstAndLastDigit : Str -> Result Str [NoDigit]
-firstAndLastDigit = \line ->
-    when (firstDigit line, lastDigit line) is
-        (Ok first, Ok last) -> Ok (Str.concat first last)
-        _ -> Err NoDigit
+    List.range { start: At (strLen line), end: At 1 }
+    |> List.walkUntil (Err NoDigit) \state, i ->
+        when line |> takeFirst i |> strEndsWithDigit is
+            Ok d -> Break (Ok d)
+            _ -> Continue state
 
 twoDigitNumber : Str -> Result U8 [NoDigit]
 twoDigitNumber = \line ->
-    firstAndLastDigit line
-    |> Result.map \digits ->
-        when Str.toU8 digits is
-            Ok n -> n
-            Err InvalidNumStr -> crash "two digits to U8 failed"
+    when (firstDigit line, lastDigit line) is
+        (Ok first, Ok last) -> Ok (10 * first + last)
+        _ -> Err NoDigit
+
+expect strStartsWithDigit "1abc2" == Ok 1
+expect strStartsWithDigit "pqr3stu8vwx" == Err NoDigit
+expect strStartsWithDigit "pqr3stu" == Err NoDigit
+expect strStartsWithDigit "hello" == Err NoDigit
+expect strStartsWithDigit "" == Err NoDigit
+expect strStartsWithDigit "abcone2threexyz" == Err NoDigit
+expect strStartsWithDigit "one2threexyz" == Ok 1
 
 expect firstDigit "1abc2" == Ok 1
 expect firstDigit "pqr3stu8vwx" == Ok 3
@@ -100,8 +142,3 @@ expect twoDigitNumber "pqr3stu8vwx" == Ok 38
 expect twoDigitNumber "pqr3stu" == Ok 33
 expect twoDigitNumber "hello" == Err NoDigit
 expect twoDigitNumber "" == Err NoDigit
-
-expect "/" |> Str.toScalars |> List.map isScalarDigit == [Bool.false]
-expect "0" |> Str.toScalars |> List.map isScalarDigit == [Bool.true]
-expect "9" |> Str.toScalars |> List.map isScalarDigit == [Bool.true]
-expect ":" |> Str.toScalars |> List.map isScalarDigit == [Bool.false]
