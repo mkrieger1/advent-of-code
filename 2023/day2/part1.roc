@@ -24,4 +24,61 @@ walkLines = \init, accumulate ->
                 End -> acc |> Done
         Task.ok result
 
-lineValue = \line -> 1
+lineValue = \line ->
+    game = parseLine line
+    if game.draws |> List.all checkPossible then
+        game.num
+    else
+        0
+
+checkPossible = \draw ->
+    draw.red <= 12 && draw.green <= 13 && draw.blue <= 14
+
+parseLine = \line ->
+    when Str.split line ": " is
+        [x, y] -> {
+            num: parseHeader x,
+            draws: parseDraws y
+        }
+        _ -> crash "Input line is not like \"x: y\""
+
+numOrCrash = \s, help ->
+    when Str.toNat s is
+        Ok num -> num
+        _ -> crash help
+
+parseHeader = \header ->
+    when Str.split header " " is
+        ["Game", x] -> numOrCrash x "x is not a number in \"Game x\""
+        _ -> crash "Header is not like \"Game x\""
+
+parseDraws = \draws ->
+    Str.split draws "; "
+    |> List.map parseCubes
+
+parseCubes = \cubes ->
+    Str.split cubes ", "
+    |> List.map parseCube
+    |> joinCubes
+
+parseCube = \cube ->
+    when Str.split cube " " is
+        [x, y] -> {
+            num: numOrCrash x "x is not a number in cube record \"x y\"",
+            color: parseColor y
+        }
+        _ -> crash "Cube record is not like \"x y\""
+
+parseColor = \color ->
+    when color is
+        "red" -> Red
+        "green" -> Green
+        "blue" -> Blue
+        _ -> crash "Invalid color"
+
+joinCubes = \cubes ->
+    List.walk cubes {red: 0, green: 0, blue: 0} \result, cube ->
+        when cube.color is
+            Red -> {result & red: cube.num}
+            Green -> {result & green: cube.num}
+            Blue -> {result & blue: cube.num}
