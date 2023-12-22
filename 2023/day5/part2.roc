@@ -65,36 +65,28 @@ lookupPart = \ranges, { destination, source, length } ->
         s = \x -> x + destination - source
         { first: s first, last: s last }
 
-    # a--b  c  d
-    #       c  d  a--b
-    noOverlap =
-        ranges |> List.keepIf \{ first: a, last: b } ->
-            b < c || d < a
+    overlap = \{ first: a, last: b } ->
+        if a < c && c <= b && b <= d then LeftOverlap       # a--c==b  d
+        else if c <= a && a <= d && d < b then RightOverlap # c  a==d--b
+        else if a < c && d < b then BothOverlap             # a--c==d--b
+        else if c <= a && b <= d then FullyContained        # c  a==b  d
+        else
+            # a--b  c  d
+            #       c  d  a--b
+            expect b < c || d < a
+            NoOverlap
 
-    # a--c==b  d
-    leftOverlap =
-        ranges |> List.keepIf \{ first: a, last: b } ->
-            a < c && c <= b && b <= d
+    filterRanges = \which ->
+        ranges |> List.keepIf \r -> overlap r == which
 
-    # c  a==d--b
-    rightOverlap =
-        ranges |> List.keepIf \{ first: a, last: b } ->
-            c <= a && a <= d && d < b
-
-    # a--c==d--b
-    bothOverlap =
-        ranges |> List.keepIf \{ first: a, last: b } ->
-            a < c && d < b
-
-    # c  a==b  d
-    fullyContained =
-        ranges |> List.keepIf \{ first: a, last: b } ->
-            c <= a && b <= d
+    leftOverlap = filterRanges LeftOverlap
+    rightOverlap = filterRanges RightOverlap
+    bothOverlap = filterRanges BothOverlap
 
     # shift and merge parts overlapping c or d as far as possible
     mappedOverlap =
         if List.len bothOverlap > 0 then
-            FullOverlap [shift c d]
+            FullCover [shift c d]
         else
             maxLeft = leftOverlap |> List.map .last |> List.max
             minRight = rightOverlap |> List.map .first |> List.min
@@ -102,23 +94,19 @@ lookupPart = \ranges, { destination, source, length } ->
             when (maxLeft, minRight) is
                 (Ok l, Ok r) ->
                     if l + 1 >= r then
-                        FullOverlap [shift c d]
+                        FullCover [shift c d]
                     else
-                        PartialOverlap [shift c l, shift r d]
+                        PartialCover [shift c l, shift r d]
 
-                (Ok l, _) ->
-                    PartialOverlap [shift c l]
-
-                (_, Ok r) ->
-                    PartialOverlap [shift r d]
-
-                _ -> PartialOverlap []
+                (Ok l, _) -> PartialCover [shift c l]
+                (_, Ok r) -> PartialCover [shift r d]
+                _ -> PartialCover []
 
     mapped =
         when mappedOverlap is
-            FullOverlap m -> m
-            PartialOverlap m ->
-                fullyContained
+            FullCover m -> m
+            PartialCover m ->
+                filterRanges FullyContained
                 |> List.map \{ first, last } -> shift first last
                 |> List.concat m
 
@@ -143,7 +131,7 @@ lookupPart = \ranges, { destination, source, length } ->
             Ok x -> [{ first: d + 1, last: x }]
 
     remaining =
-        noOverlap
+        filterRanges NoOverlap
         |> List.concat remainingOutsideLeft
         |> List.concat remainingOutsideRight
 
