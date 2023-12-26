@@ -9,7 +9,7 @@ parseMaps =
     instructionsLine <- Stdin.line |> Task.await
     instructions =
         when instructionsLine is
-            Input s -> s |> Str.toUtf8
+            Input line -> parseInstructions line
             End -> crash "Expected at least one line"
 
     emptyLine <- Stdin.line |> Task.await
@@ -18,6 +18,15 @@ parseMaps =
     network <- parseNetwork |> Task.await
 
     Task.ok { instructions, network }
+
+parseInstructions = \line ->
+    line
+    |> Str.toUtf8
+    |> List.map \c ->
+        when c is
+            'L' -> Left
+            'R' -> Right
+            _ -> crash "Invalid instruction"
 
 parseNetwork =
     walkLines (Dict.empty {}) \nodes, line ->

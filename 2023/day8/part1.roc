@@ -26,9 +26,7 @@ navigate = \map ->
         instruction =
             when map.instructions |> List.get index is
                 Err OutOfBounds -> crash "Should not happen"
-                Ok 'L' -> Left
-                Ok 'R' -> Right
-                Ok _ -> crash "Invalid instruction"
+                Ok i -> i
 
         choices =
             when map.network |> Dict.get location is
