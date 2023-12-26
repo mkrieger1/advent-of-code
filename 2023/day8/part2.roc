@@ -18,22 +18,23 @@ main =
     |> Num.toStr
     |> Stdout.line
 
-navigate = \map ->
-    endsWith = \label, letter ->
-        when label |> Str.toUtf8 is
-            [_, _, c] if c == letter -> Bool.true
-            _ -> Bool.false
+endsWith = \label, letter ->
+    when label |> Str.toUtf8 is
+        [_, _, c] if c == letter -> Bool.true
+        _ -> Bool.false
 
-    startLocations =
-        Dict.keys map.network
-        |> List.keepIf \label -> label |> endsWith 'A'
+isStart = \label -> label |> endsWith 'A'
 
-    isEnd = \locations ->
-        locations
-        |> List.all \label -> label |> endsWith 'Z'
+isEnd = \label -> label |> endsWith 'Z'
 
-    nextLocation = \steps, location ->
-        index = steps % (map.instructions |> List.len)
+wrappedSteps = \map, steps ->
+    steps % (map.instructions |> List.len)
+
+navigateNextEnd = \map, ghost ->
+    initialSteps = ghost.steps
+
+    nextLocation = \{ steps, location } ->
+        index = wrappedSteps map steps
 
         instruction =
             when map.instructions |> List.get index is
@@ -49,14 +50,92 @@ navigate = \map ->
             Left -> choices.left
             Right -> choices.right
 
-    nextStep = \steps, locations ->
-        if isEnd locations then
-            steps
+    doSteps = \current ->
+        next = {
+            steps: current.steps + 1,
+            location: nextLocation current
+        }
+        if isEnd next.location then
+            next
         else
-            nextLocations =
-                locations
-                |> List.map \location ->
-                    nextLocation steps location
-            nextStep (steps + 1) nextLocations
+            doSteps next
 
-    nextStep 0 startLocations
+    final = doSteps ghost
+    { final & steps: final.steps - initialSteps }
+
+findNextEnd = \map, { shortcuts, current } ->
+    index = wrappedSteps map current.steps
+    key = { location: current.location, index }
+    when shortcuts |> Dict.get key is
+        Ok found -> {
+            shortcuts,
+            found: { found & steps: found.steps + current.steps }
+        }
+        Err KeyNotFound ->
+            found = navigateNextEnd map current
+            {
+                shortcuts: shortcuts |> Dict.insert key found,
+                found: { found & steps: found.steps + current.steps }
+            }
+
+allEnd = \ghosts ->
+    ghosts |> List.map .location |> List.all isEnd
+
+sameSteps = \ghosts ->
+    steps = ghosts |> List.map .steps
+
+    unwrap = \result ->
+        when result is
+            Ok m -> m
+            Err ListWasEmpty -> crash "List was empty"
+
+    min = steps |> List.min |> unwrap
+    max = steps |> List.max |> unwrap
+
+    if min == max then
+        Same min
+    else
+        Different
+
+finished = \ghosts ->
+    if allEnd ghosts then
+        when sameSteps ghosts is
+            Same steps -> Finished steps
+            Different -> NotFinished
+    else
+        NotFinished
+
+moveLastGhost = \map, { shortcuts, ghosts } ->
+    stepsDesc = \a, b -> Num.compare b.steps a.steps
+    sortedGhosts = ghosts |> List.sortWith stepsDesc
+
+    last =
+        when sortedGhosts |> List.last is
+            Err ListWasEmpty -> crash "List was empty"
+            Ok l -> l
+
+    remaining =
+        n = List.len ghosts
+        sortedGhosts |> List.takeFirst (n - 1)
+
+    next = findNextEnd map { shortcuts, current: last }
+    {
+        shortcuts: next.shortcuts,
+        ghosts: remaining |> List.append next.found
+    }
+
+navigate = \map ->
+    startGhosts =
+        Dict.keys map.network
+        |> List.keepIf isStart
+        |> List.map \label ->
+            { steps: 0, location: label }
+
+    doNext = \current ->
+        when finished current.ghosts is
+            Finished steps -> steps
+            NotFinished ->
+                moveLastGhost map current
+                |> doNext
+
+    doNext { shortcuts: Dict.empty {}, ghosts: startGhosts }
