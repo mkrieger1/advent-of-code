@@ -27,14 +27,11 @@ isStart = \label -> label |> endsWith 'A'
 
 isEnd = \label -> label |> endsWith 'Z'
 
-wrappedSteps = \map, steps ->
-    steps % (map.instructions |> List.len)
-
-navigateNextEnd = \map, ghost ->
-    initialSteps = ghost.steps
+navigateNextEnd = \ghost, map ->
+    numInstructions = List.len map.instructions
 
     nextLocation = \{ steps, location } ->
-        index = wrappedSteps map steps
+        index = steps % numInstructions
 
         instruction =
             when map.instructions |> List.get index is
@@ -60,82 +57,23 @@ navigateNextEnd = \map, ghost ->
         else
             doSteps next
 
-    final = doSteps ghost
-    { final & steps: final.steps - initialSteps }
-
-findNextEnd = \map, { shortcuts, current } ->
-    index = wrappedSteps map current.steps
-    key = { location: current.location, index }
-    when shortcuts |> Dict.get key is
-        Ok found -> {
-            shortcuts,
-            found: { found & steps: found.steps + current.steps }
-        }
-        Err KeyNotFound ->
-            found = navigateNextEnd map current
-            {
-                shortcuts: shortcuts |> Dict.insert key found,
-                found: { found & steps: found.steps + current.steps }
-            }
-
-allEnd = \ghosts ->
-    ghosts |> List.map .location |> List.all isEnd
-
-sameSteps = \ghosts ->
-    steps = ghosts |> List.map .steps
-
-    unwrap = \result ->
-        when result is
-            Ok m -> m
-            Err ListWasEmpty -> crash "List was empty"
-
-    min = steps |> List.min |> unwrap
-    max = steps |> List.max |> unwrap
-
-    if min == max then
-        Same min
-    else
-        Different
-
-finished = \ghosts ->
-    if allEnd ghosts then
-        when sameSteps ghosts is
-            Same steps -> Finished steps
-            Different -> NotFinished
-    else
-        NotFinished
-
-moveLastGhost = \map, { shortcuts, ghosts } ->
-    stepsDesc = \a, b -> Num.compare b.steps a.steps
-    sortedGhosts = ghosts |> List.sortWith stepsDesc
-
-    last =
-        when sortedGhosts |> List.last is
-            Err ListWasEmpty -> crash "List was empty"
-            Ok l -> l
-
-    remaining =
-        n = List.len ghosts
-        sortedGhosts |> List.takeFirst (n - 1)
-
-    next = findNextEnd map { shortcuts, current: last }
-    {
-        shortcuts: next.shortcuts,
-        ghosts: remaining |> List.append next.found
-    }
+    doSteps ghost
 
 navigate = \map ->
-    startGhosts =
+    ghosts =
         Dict.keys map.network
         |> List.keepIf isStart
-        |> List.map \label ->
-            { steps: 0, location: label }
+        |> List.map \location -> { steps: 0, location }
+        |> List.map \ghost -> ghost |> navigateNextEnd map
 
-    doNext = \current ->
-        when finished current.ghosts is
-            Finished steps -> steps
-            NotFinished ->
-                moveLastGhost map current
-                |> doNext
+    n = List.len map.instructions
 
-    doNext { shortcuts: Dict.empty {}, ghosts: startGhosts }
+    # This works under the assumption that the path of each ghost loops back
+    # from the first xxZ location to the starting position, and that the length
+    # of the loop is a multiple of the number of instructions, and that this
+    # multiple is a prime number. So we don't even need to do a full LCM
+    # calculation.
+    ghosts
+        |> List.map \ghost -> ghost.steps // n
+        |> List.walk 1 \product, x -> product * x
+        |> \x -> x * n
