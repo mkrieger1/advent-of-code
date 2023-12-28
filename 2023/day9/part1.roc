@@ -29,19 +29,21 @@ main =
 
     run |> Task.onErr handleErr
 
-parseSequences : Task (List (List I32)) _
+Sequence : List I32
+
+parseSequences : Task (List Sequence) _
 parseSequences =
     walkLinesTry [] \sequences, line ->
         seq <- parseSequence line |> Result.try
         sequences |> List.append seq |> Ok
 
-parseSequence : Str -> Result (List I32) _
+parseSequence : Str -> Result Sequence _
 parseSequence = \line ->
     line
     |> splitSpaces
     |> List.mapTry Str.toI32
 
-solve : List (List I32) -> Result I32 _
+solve : List Sequence -> Result I32 _
 solve = \sequences ->
     extrapolated <-
         sequences
@@ -50,6 +52,26 @@ solve = \sequences ->
 
     extrapolated |> List.sum |> Ok
 
-extrapolate : List I32 -> Result I32 _
+allSame : Sequence -> Bool
+allSame = \sequence ->
+    when sequence is
+        [] -> Bool.true
+        [x, .. as rest] -> rest |> List.all \y -> y == x
+
+derivative : Sequence -> Sequence
+derivative = \sequence ->
+    when sequence is
+        [] -> []
+        [x, .. as rest] ->
+            when rest is
+                [] -> []
+                [y, ..] -> [y - x] |> List.concat (derivative rest)
+
+extrapolate : Sequence -> Result I32 _
 extrapolate = \sequence ->
-    List.last sequence
+    last <- List.last sequence |> Result.try
+    if allSame sequence then
+        last |> Ok
+    else
+        next <- derivative sequence |> extrapolate |> Result.try
+        last + next |> Ok
