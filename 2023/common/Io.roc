@@ -4,17 +4,13 @@ interface Io
         walkLinesTry,
         printSumLines,
     ]
-    imports [pf.Stdin, pf.Stdout, pf.Task]
+    imports [pf.Stdin, pf.Stdout, pf.Task.{ Task }]
 
+walkLines : a, (a, Str -> a) -> Task a *
 walkLines = \init, accumulate ->
-    Task.loop init \acc ->
-        read <- Task.await Stdin.line
-        result =
-            when read is
-                Input line -> accumulate acc line |> Step
-                End -> acc |> Done
-        Task.ok result
+    walkLinesTry init (\acc, line -> accumulate acc line |> Ok)
 
+walkLinesTry : a, (a, Str -> Result a b) -> Task a b
 walkLinesTry = \init, accumulate ->
     Task.loop init \acc ->
         read <- Task.await Stdin.line
