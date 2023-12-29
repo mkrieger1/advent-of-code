@@ -130,12 +130,13 @@ solve = \maze ->
             expect pos == start  # assume there is only one start
             Ok count
         else
-            when nextDirection inDir tile is
+            next =
+                outDir <- nextDirection inDir tile |> Result.try
+                maze |> move pos outDir
+
+            when next is
                 Err e -> Err e
-                Ok outDir ->
-                    when maze |> move pos outDir is
-                        Err e -> Err e
-                        Ok next -> step next (count + 1)
+                Ok state -> step state (count + 1)
 
     loopLength <- step init 1 |> Result.try
     Ok (loopLength // 2)
