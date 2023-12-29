@@ -29,8 +29,7 @@ main =
 
     run |> Task.onErr handleErr
 
-Index : Nat
-Position : { row : Index, col : Index }
+Position : { row : Nat, col : Nat }
 Direction : [Up, Down, Left, Right]
 Tile : [
     NorthSouth, EastWest, NorthEast, NorthWest, SouthWest, SouthEast,
@@ -65,20 +64,13 @@ parseTile = \c ->
         'S' -> Ok Start
         _ -> Err (InvalidTile c)
 
-findStartInRow : MazeRow -> [NotFound, Found Index]
-findStartInRow = \row ->
-    index = row |> List.findFirstIndex \tile -> tile == Start
-    when index is
-        Ok col -> Found col
-        Err NotFound -> NotFound
-
 findStart : Maze -> Result Position [NoStart]
 findStart = \maze ->
     maze
-    |> List.walkWithIndexUntil (Err NoStart) \state, row, index ->
-        when findStartInRow row is
-            Found col -> Ok { row: index, col } |> Break
-            NotFound -> state |> Continue
+    |> List.walkWithIndexUntil (Err NoStart) \state, row, rowIndex ->
+        when row |> List.findFirstIndex \tile -> tile == Start is
+            Ok col -> Ok { row: rowIndex, col } |> Break
+            Err NotFound -> state |> Continue
 
 getTile : Maze, Position -> Result Tile [OutOfBounds]
 getTile = \maze, { row, col } ->
