@@ -1,3 +1,3 @@
 package "common"
-    exposes [Io, Parse]
+    exposes [Io, Loop, Parse]
     packages {}

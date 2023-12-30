@@ -6,6 +6,7 @@ app "day9-part1"
     imports [
         pf.Stdin, pf.Stdout, pf.Stderr, pf.Task.{ Task },
         common.Io.{ walkLinesTry },
+        common.Loop.{ loop },
     ]
     provides [main] to pf
 
@@ -124,19 +125,14 @@ solve = \maze ->
     dir <- maze |> initialDirection start |> Result.try
     init <- maze |> move start dir |> Result.try
 
-    step : MoveState, Nat -> Result Nat _
-    step = \{ tile, pos, inDir }, count ->
+    step = \{ state: { tile, pos, inDir }, count } ->
         if tile == Start then
             expect pos == start  # assume there is only one start
-            Ok count
+            Break count |> Ok
         else
-            next =
-                outDir <- nextDirection inDir tile |> Result.try
-                maze |> move pos outDir
+            outDir <- nextDirection inDir tile |> Result.try
+            state <- maze |> move pos outDir |> Result.try
+            Continue { state, count: count + 1 } |> Ok
 
-            when next is
-                Err e -> Err e
-                Ok state -> step state (count + 1)
-
-    loopLength <- step init 1 |> Result.try
+    loopLength <- loop { state: init, count: 1 } step |> Result.try
     Ok (loopLength // 2)
