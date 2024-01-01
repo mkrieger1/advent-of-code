@@ -5,8 +5,11 @@ app "day10-part1"
     }
     imports [
         pf.Stdin, pf.Stdout, pf.Stderr, pf.Task.{ Task },
-        common.Io.{ walkLinesTry },
         common.Loop.{ loop },
+        Day10.{
+            Direction, Maze, Position,
+            findStart, move, nextDirection, parseMaze,
+        }
     ]
     provides [main] to pf
 
@@ -30,66 +33,6 @@ main =
 
     run |> Task.onErr handleErr
 
-Position : { row : Nat, col : Nat }
-Direction : [Up, Down, Left, Right]
-Tile : [
-    NorthSouth, EastWest, NorthEast, NorthWest, SouthWest, SouthEast,
-    Ground, Start,
-]
-MoveState : { tile : Tile, pos : Position, inDir : Direction }
-MazeRow : List Tile
-Maze : List MazeRow
-
-parseMaze : Task Maze _
-parseMaze =
-    walkLinesTry [] \maze, line ->
-        row <- parseRow line |> Result.try
-        maze |> List.append row |> Ok
-
-parseRow : Str -> Result MazeRow _
-parseRow = \line ->
-    line
-    |> Str.toUtf8
-    |> List.mapTry parseTile
-
-parseTile : U8 -> Result Tile _
-parseTile = \c ->
-    when c is
-        '|' -> Ok NorthSouth
-        '-' -> Ok EastWest
-        'L' -> Ok NorthEast
-        'J' -> Ok NorthWest
-        '7' -> Ok SouthWest
-        'F' -> Ok SouthEast
-        '.' -> Ok Ground
-        'S' -> Ok Start
-        _ -> Err (InvalidTile c)
-
-findStart : Maze -> Result Position [NoStart]
-findStart = \maze ->
-    maze
-    |> List.walkWithIndexUntil (Err NoStart) \state, row, rowIndex ->
-        when row |> List.findFirstIndex \tile -> tile == Start is
-            Ok col -> Ok { row: rowIndex, col } |> Break
-            Err NotFound -> state |> Continue
-
-getTile : Maze, Position -> Result Tile [OutOfBounds]
-getTile = \maze, { row, col } ->
-    mazeRow <- maze |> List.get row |> Result.try
-    mazeRow |> List.get col
-
-move : Maze, Position, Direction -> Result MoveState [OutOfBounds]
-move = \maze, { row, col }, dir ->
-    pos =
-        when dir is
-            Up -> { row: row - 1, col }
-            Down -> { row: row + 1, col }
-            Left -> { row, col: col - 1 }
-            Right -> { row, col: col + 1 }
-
-    tile <- maze |> getTile pos |> Result.try
-    Ok { tile, pos, inDir: dir }
-
 initialDirection : Maze, Position -> Result Direction [NotConnected]
 initialDirection = \maze, start ->
     isConnected = \dir, tile ->
@@ -108,16 +51,6 @@ initialDirection = \maze, start ->
             when maze |> move start dir is
                 Ok { tile } if isConnected dir tile -> Ok dir |> Break
                 _ -> state |> Continue
-
-nextDirection : Direction, Tile -> Result Direction [DeadEnd]
-nextDirection = \in, tile ->
-    expect tile != Start
-    when (in, tile) is
-        (Left, NorthEast) | (Right, NorthWest) | (Up, NorthSouth) -> Ok Up
-        (Left, SouthEast) | (Right, SouthWest) | (Down, NorthSouth) -> Ok Down
-        (Up, SouthWest) | (Down, NorthWest) | (Left, EastWest) -> Ok Left
-        (Up, SouthEast) | (Down, NorthEast) | (Right, EastWest) -> Ok Right
-        _ -> Err DeadEnd
 
 solve : Maze -> Result Nat _
 solve = \maze ->
