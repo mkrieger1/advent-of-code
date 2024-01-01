@@ -41,9 +41,8 @@ MoveState : { tile : Tile, pos : Position, inDir : Direction }
 MazeRow : List Tile
 Maze : List MazeRow
 
-MazeLoopTile : [Some Tile, Empty]
-MazeLoopRow : List MazeLoopTile
-MazeLoop : List MazeLoopRow
+MaybeTile : [Some Tile, Empty]
+SparseMaze : List (List MaybeTile)
 
 parseMaze : Task Maze _
 parseMaze =
@@ -95,7 +94,7 @@ ensureSize = \list, i, fillValue ->
         fill = fillValue |> List.repeat missing
         list |> List.concat fill
 
-insertTile : MazeLoop, Position, Tile -> MazeLoop
+insertTile : SparseMaze, Position, Tile -> SparseMaze
 insertTile = \loop, pos, tile ->
     newLoop = loop |> ensureSize pos.row []
     row =
@@ -173,7 +172,7 @@ nextDirection = \in, tile ->
         (Up, SouthEast) | (Down, NorthEast) | (Right, EastWest) -> Ok Right
         _ -> Err DeadEnd
 
-drawLoop : Maze -> Result MazeLoop _
+drawLoop : Maze -> Result SparseMaze _
 drawLoop = \maze ->
     start <- maze |> findStart |> Result.try
     { dir, tile: startTile } <- maze |> revealStart start |> Result.try
@@ -191,69 +190,94 @@ drawLoop = \maze ->
     # do not confuse "Loop.loop" for iteration with "loop" in the maze
     Loop.loop { state: init, draw: [] } step
 
-countEnclosedTiles : MazeLoop -> Result Nat _
-countEnclosedTiles = \loop ->
-    rowCounts <- loop |> List.mapTry countEnclosedTilesInRow |> Result.try
-    rowCounts |> List.sum |> Ok
+countEnclosed : (List MaybeTile) -> Nat
+countEnclosed = \row ->
+    State : {
+        enclosed : [Outside, Inside],
+        horizontal : [NotHorizontal, Horizontal Tile],
+        count: Nat
+    }
+    init : State
+    init = { enclosed: Outside, horizontal: NotHorizontal, count: 0 }
 
-countEnclosedTilesInRow : MazeLoopRow -> Result Nat _
-countEnclosedTilesInRow = \row ->
+    unwrap : MaybeTile -> Tile
+    unwrap = \tile ->
+        when tile is
+            Some t -> t
+            Empty -> crash "impossible"
+
+    countUp : State -> State
+    countUp = \state -> { state & count: state.count + 1 }
+
     toggle = \enclosed ->
         when enclosed is
             Inside -> Outside
             Outside -> Inside
 
-    toggleHorizontalPair = \enclosed, { begin, end } ->
-        when (begin, end) is
-            (NorthEast, SouthWest) | (SouthEast, NorthWest) -> toggle enclosed
-            (NorthEast, NorthWest) | (SouthEast, SouthWest) -> enclosed
+    toggleVertical : State -> State
+    toggleVertical = \state -> { state & enclosed: toggle state.enclosed }
+
+    openHorizontal : State, Tile -> State
+    openHorizontal = \state, tile ->
+        when tile is
+            NorthEast | SouthEast ->
+                { state & horizontal: Horizontal tile }
+
             _ -> crash "impossible"
 
-    init = { enclosed: Outside, horizontal: NotHorizontal, count: 0 }
+    closeHorizontal : State, Tile -> State
+    closeHorizontal = \state, tile ->
+        enclosed =
+            when (state.horizontal, tile) is
+                (Horizontal NorthEast, SouthWest)
+                | (Horizontal SouthEast, NorthWest) ->
+                    toggle state.enclosed
 
-    step = \state, loopTile ->
-        when loopTile is
-            Empty ->
-                when state.horizontal is
-                    NotHorizontal ->
-                        when state.enclosed is
-                            Inside -> Ok { state & count: state.count + 1 }
-                            Outside -> Ok state
-                    OpenHorizontal _ -> Err DeadEnd
-            Some t ->
-                when t is
-                    NorthSouth ->
-                        when state.horizontal is
-                            NotHorizontal -> Ok {
-                                state &
-                                enclosed: toggle state.enclosed
-                            }
-                            OpenHorizontal _ -> Err DeadEnd
-                    EastWest ->
-                        when state.horizontal is
-                            NotHorizontal -> Err DeadEnd
-                            OpenHorizontal _ -> Ok state
-                    NorthEast | SouthEast ->
-                        when state.horizontal is
-                            NotHorizontal ->
-                                Ok { state & horizontal: OpenHorizontal t }
-                            OpenHorizontal _ -> Err DeadEnd
-                    NorthWest | SouthWest ->
-                        when state.horizontal is
-                            NotHorizontal -> Err DeadEnd
-                            OpenHorizontal begin -> Ok {
-                                state &
-                                enclosed:
-                                    state.enclosed
-                                    |> toggleHorizontalPair { begin, end: t },
-                                horizontal: NotHorizontal
-                            }
-                    Ground | Start -> crash "impossible"
+                (Horizontal NorthEast, NorthWest)
+                | (Horizontal SouthEast, SouthWest) ->
+                    state.enclosed
 
-    result <- row |> List.walkTry init step |> Result.try
-    Ok result.count
+                _ -> crash "impossible"
+
+        { state & enclosed, horizontal: NotHorizontal }
+
+    step : State, MaybeTile -> State
+    step = \state, tile ->
+        when (state.horizontal, tile) is
+            (NotHorizontal, Empty) ->
+                when state.enclosed is
+                    Inside -> state |> countUp
+                    Outside -> state
+
+            (NotHorizontal, Some NorthSouth) ->
+                state |> toggleVertical
+
+            (NotHorizontal, Some NorthEast)
+            | (NotHorizontal, Some SouthEast) ->
+                state |> openHorizontal (unwrap tile)
+
+            (Horizontal _, Some EastWest) ->
+                state
+
+            (Horizontal _, Some NorthWest)
+            | (Horizontal _, Some SouthWest) ->
+                state |> closeHorizontal (unwrap tile)
+
+            (Horizontal _, Empty)
+            | (Horizontal _, Some NorthSouth)
+            | (Horizontal _, Some NorthEast)
+            | (Horizontal _, Some SouthEast)
+            | (NotHorizontal, Some EastWest)
+            | (NotHorizontal, Some NorthWest)
+            | (NotHorizontal, Some SouthWest) ->
+                crash "impossible dead end"
+
+            (_, Some Ground) | (_, Some Start) ->
+                crash "impossible loop tile"
+
+    row |> List.walk init step |> .count
 
 solve : Maze -> Result Nat _
 solve = \maze ->
     loop <- drawLoop maze |> Result.try
-    loop |> countEnclosedTiles
+    loop |> List.map countEnclosed |> List.sum |> Ok
