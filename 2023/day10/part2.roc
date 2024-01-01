@@ -33,36 +33,6 @@ main =
 
     run |> Task.onErr handleErr
 
-MaybeTile : [Some Tile, Empty]
-SparseMaze : List (List MaybeTile)
-
-ensureSize : List a, Index, a -> List a
-ensureSize = \list, i, fillValue ->
-    length = List.len list
-    needed = i + 1
-    if length >= needed then
-        list
-    else
-        missing = needed - length
-        expect missing >= 1
-        fill = fillValue |> List.repeat missing
-        list |> List.concat fill
-
-insertTile : SparseMaze, Position, Tile -> SparseMaze
-insertTile = \loop, pos, tile ->
-    newLoop = loop |> ensureSize pos.row []
-    row =
-        when newLoop |> List.get pos.row is
-            Err OutOfBounds -> crash "impossible"
-            Ok r -> r
-
-    newRow =
-        row
-        |> ensureSize pos.col Empty
-        |> List.set pos.col (Some tile)
-
-    newLoop |> List.set pos.row newRow
-
 revealStart :
     Maze, Position -> Result { dir : Direction, tile : Tile } [InvalidStart]
 revealStart = \maze, start ->
@@ -96,112 +66,100 @@ revealStart = \maze, start ->
         [dir, otherDir] -> { dir, tile: startTile dir otherDir } |> Ok
         _ -> InvalidStart |> Err
 
-drawLoop : Maze -> Result SparseMaze _
-drawLoop = \maze ->
+ensureSize : List a, Index, a -> List a
+ensureSize = \list, i, fillValue ->
+    length = List.len list
+    needed = i + 1
+    if length >= needed then
+        list
+    else
+        missing = needed - length
+        expect missing >= 1
+        fill = fillValue |> List.repeat missing
+        list |> List.concat fill
+
+Angle : [Up, Down]
+Boundary : [Empty, Open Angle, Close Angle, StayOpen, Vertical]
+BoundaryMap : List (List Boundary)
+
+insert : BoundaryMap, Position, Tile -> BoundaryMap
+insert = \map, pos, tile ->
+    newMap = map |> ensureSize pos.row []
+    row =
+        when newMap |> List.get pos.row is
+            Err OutOfBounds -> crash "impossible"
+            Ok r -> r
+
+    boundary =
+        when tile is
+            NorthSouth -> Vertical
+            EastWest -> StayOpen
+            NorthEast -> Open Up
+            SouthEast -> Open Down
+            NorthWest -> Close Up
+            SouthWest -> Close Down
+            _ -> Empty
+    newRow =
+        row
+        |> ensureSize pos.col Empty
+        |> List.set pos.col boundary
+
+    newMap |> List.set pos.row newRow
+
+drawBoundary : Maze -> Result BoundaryMap _
+drawBoundary = \maze ->
     start <- maze |> findStart |> Result.try
     { dir, tile: startTile } <- maze |> revealStart start |> Result.try
     init <- maze |> move start dir |> Result.try
 
-    step = \{ state: { tile, pos, inDir }, draw } ->
+    step = \{ state: { tile, pos, inDir }, map } ->
         if tile == Start then
             expect pos == start  # assume there is only one start
-            draw |> insertTile pos startTile |> Break |> Ok
+            map |> insert pos startTile |> Break |> Ok
         else
             outDir <- nextDirection inDir tile |> Result.try
             state <- maze |> move pos outDir |> Result.try
-            { state, draw: draw |> insertTile pos tile } |> Continue |> Ok
+            { state, map: map |> insert pos tile } |> Continue |> Ok
 
-    # do not confuse "Loop.loop" for iteration with "loop" in the maze
-    Loop.loop { state: init, draw: [] } step
+    Loop.loop { state: init, map: [] } step
 
-countEnclosed : (List MaybeTile) -> Nat
+
+countEnclosed : (List Boundary) -> Nat
 countEnclosed = \row ->
-    State : {
-        enclosed : [Outside, Inside],
-        horizontal : [NotHorizontal, Horizontal Tile],
-        count: Nat
-    }
-    init : State
-    init = { enclosed: Outside, horizontal: NotHorizontal, count: 0 }
-
-    unwrap : MaybeTile -> Tile
-    unwrap = \tile ->
-        when tile is
-            Some t -> t
-            Empty -> crash "impossible"
-
-    countUp : State -> State
-    countUp = \state -> { state & count: state.count + 1 }
+    init = { enclosed: Outside, horizontal: Closed, count: 0 }
 
     toggle = \enclosed ->
         when enclosed is
             Inside -> Outside
             Outside -> Inside
 
-    toggleVertical : State -> State
-    toggleVertical = \state -> { state & enclosed: toggle state.enclosed }
-
-    openHorizontal : State, Tile -> State
-    openHorizontal = \state, tile ->
-        when tile is
-            NorthEast | SouthEast ->
-                { state & horizontal: Horizontal tile }
-
-            _ -> crash "impossible"
-
-    closeHorizontal : State, Tile -> State
-    closeHorizontal = \state, tile ->
-        enclosed =
-            when (state.horizontal, tile) is
-                (Horizontal NorthEast, SouthWest)
-                | (Horizontal SouthEast, NorthWest) ->
-                    toggle state.enclosed
-
-                (Horizontal NorthEast, NorthWest)
-                | (Horizontal SouthEast, SouthWest) ->
-                    state.enclosed
-
-                _ -> crash "impossible"
-
-        { state & enclosed, horizontal: NotHorizontal }
-
-    step : State, MaybeTile -> State
-    step = \state, tile ->
-        when (state.horizontal, tile) is
-            (NotHorizontal, Empty) ->
+    step = \state, boundary ->
+        when (state.horizontal, boundary) is
+            (Closed, Empty) ->
                 when state.enclosed is
-                    Inside -> state |> countUp
+                    Inside -> { state & count: state.count + 1 }
                     Outside -> state
 
-            (NotHorizontal, Some NorthSouth) ->
-                state |> toggleVertical
+            (Closed, Vertical) ->
+                { state & enclosed: toggle state.enclosed }
 
-            (NotHorizontal, Some NorthEast)
-            | (NotHorizontal, Some SouthEast) ->
-                state |> openHorizontal (unwrap tile)
+            (Closed, Open angle) ->
+                { state & horizontal: Open angle }
 
-            (Horizontal _, Some EastWest) ->
+            (Open _, StayOpen) ->
                 state
 
-            (Horizontal _, Some NorthWest)
-            | (Horizontal _, Some SouthWest) ->
-                state |> closeHorizontal (unwrap tile)
+            (Open Up, Close Down) | (Open Down, Close Up) ->
+                { state & enclosed: toggle state.enclosed, horizontal: Closed }
 
-            (Horizontal _, Empty)
-            | (Horizontal _, Some NorthSouth)
-            | (Horizontal _, Some NorthEast)
-            | (Horizontal _, Some SouthEast)
-            | (NotHorizontal, Some EastWest)
-            | (NotHorizontal, Some NorthWest)
-            | (NotHorizontal, Some SouthWest) ->
-                crash "impossible dead end"
+            (Open Up, Close Up) | (Open Down, Close Down) ->
+                { state & horizontal: Closed }
 
-            (_, Some Ground) | (_, Some Start) ->
-                crash "impossible loop tile"
+            _ -> crash "impossible dead end"
 
     row |> List.walk init step |> .count
 
 solve : Maze -> Result Nat _
 solve = \maze ->
-    loop <- drawLoop maze |> Result.try
-    loop |> List.map countEnclosed |> List.sum |> Ok
+    map <- drawBoundary maze |> Result.try
+    map |> List.map countEnclosed |> List.sum |> Ok
