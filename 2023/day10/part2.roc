@@ -111,21 +111,17 @@ insertTile = \loop, pos, tile ->
 
 move : Maze, Position, Direction -> Result MoveState [OutOfBounds]
 move = \maze, { row, col }, dir ->
-    inc = \x -> x |> Num.addChecked 1
-    dec = \x -> x |> Num.subChecked 1
+    inc = \x -> x + 1
+    dec = \x -> x |> Num.subChecked 1 |> Result.mapErr \_ -> OutOfBounds
 
     posChecked =
         when dir is
             Up -> dec row |> Result.try \r -> Ok { row: r, col }
-            Down -> inc row |> Result.try \r -> Ok { row: r, col }
+            Down -> inc row |> \r -> Ok { row: r, col }
             Left -> dec col |> Result.try \c -> Ok { row, col: c }
-            Right -> inc col |> Result.try \c -> Ok { row, col: c }
+            Right -> inc col |> \c -> Ok { row, col: c }
 
-    pos <-
-        posChecked
-        |> Result.mapErr \e -> when e is Overflow -> OutOfBounds
-        |> Result.try
-
+    pos <- posChecked |> Result.try
     tile <- maze |> getTile pos |> Result.try
     Ok { tile, pos, inDir: dir }
 
