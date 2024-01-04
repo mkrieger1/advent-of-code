@@ -48,7 +48,7 @@ addCopies = \pile, card ->
             card.winning |> Set.contains number
         |> List.len
 
-    winCards = List.range { start: At (n + 1), end: At (n + wins), step: 1 }
+    winCards = List.range { start: At (n + 1), end: Length wins, step: 1 }
 
     instances =
         when pile |> Dict.get n is
