@@ -75,5 +75,5 @@ navigate = \map ->
     # calculation.
     ghosts
         |> List.map \ghost -> ghost.steps // n
-        |> List.walk 1 \product, x -> product * x
+        |> List.product
         |> \x -> x * n
