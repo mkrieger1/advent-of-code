@@ -21,6 +21,7 @@ main =
         msg =
             when err is
                 InvalidInput -> "Expected only '.' and '#' in input"
+                NoGalaxies -> "Input contained no galaxies"
         msg |> Stderr.line
 
     run |> Task.onErr handleErr
@@ -49,5 +50,72 @@ parseLine = \line ->
             _ -> state |> List.append (Err InvalidInput)
     |> List.mapTry \x -> x
 
+missingCoords = \coords ->
+    maxCoord <-
+        coords
+        |> List.max
+        |> Result.mapErr \e -> when e is ListWasEmpty -> NoGalaxies
+        |> Result.try
+
+    allCoords =
+        List.range { start: At 0, end: At maxCoord }
+        |> Set.fromList
+
+    coords
+    |> List.walk allCoords \remaining, i -> remaining |> Set.remove i
+    |> Set.toList
+    |> List.sortAsc
+    |> Ok
+
+# assuming missing is sorted in ascending order
+numMissingSmallerThan = \missing, target ->
+    missing
+    |> List.walkUntil 0 \count, elem ->
+        if elem < target then
+            count + 1 |> Continue
+        else
+            count |> Break
+
+expandUniverse = \galaxies ->
+    emptyRows <- galaxies |> List.map .row |> missingCoords |> Result.try
+    emptyColumns <- galaxies |> List.map .col |> missingCoords |> Result.try
+
+    galaxies
+    |> List.map \{ row, col } ->
+        rowExpansion = emptyRows |> numMissingSmallerThan row
+        colExpansion = emptyColumns |> numMissingSmallerThan col
+        { row: row + rowExpansion, col: col + colExpansion }
+    |> Ok
+
+allPairs = \items ->
+    makePairs = \pairs, remaining ->
+        when remaining is
+            [] ->
+                pairs
+            [first, .. as rest] ->
+                newPairs = rest |> List.map \other -> (first, other)
+                makePairs (pairs |> List.concat newPairs) rest
+
+    makePairs [] items
+
+distance1d = \first, second ->
+    (small, large) =
+        if first <= second then
+            (first, second)
+        else
+            (second, first)
+
+    large - small
+
+distance = \( first, second ) ->
+    rowDistance = distance1d first.row second.row
+    colDistance = distance1d first.col second.col
+    rowDistance + colDistance
+
 solve = \galaxies ->
-    Ok 0
+    expandedGalaxies <- expandUniverse galaxies |> Result.try
+    expandedGalaxies
+    |> allPairs
+    |> List.map distance
+    |> List.sum
+    |> Ok
