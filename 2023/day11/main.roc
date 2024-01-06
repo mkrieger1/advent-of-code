@@ -1,4 +1,4 @@
-app "day11-part1"
+app "day11"
     packages {
         pf: "https://github.com/roc-lang/basic-cli/releases/download/0.7.0/bkGby8jb0tmZYsy2hg1E_B2QrCgcSTxdUlHtETwm5m4.tar.br",
         common: "../common/main.roc",
@@ -14,8 +14,13 @@ unused = Stdin.line
 main =
     run =
         galaxies <- parseGalaxies |> Task.await
-        result <- solve galaxies |> Task.fromResult |> Task.await
-        result |> Num.toStr |> Stdout.line
+        result1 <- solve galaxies Part1 |> Task.fromResult |> Task.await
+        result2 <- solve galaxies Part2 |> Task.fromResult |> Task.await
+        Stdout.line
+            """
+            part 1: \(result1 |> Num.toStr)
+            part 2: \(result2 |> Num.toStr)
+            """
 
     handleErr = \err ->
         msg =
@@ -76,15 +81,16 @@ numMissingSmallerThan = \missing, target ->
         else
             count |> Break
 
-expandUniverse = \galaxies ->
+expandUniverse = \galaxies, expansion ->
     emptyRows <- galaxies |> List.map .row |> missingCoords |> Result.try
     emptyColumns <- galaxies |> List.map .col |> missingCoords |> Result.try
 
+    factor = expansion - 1
     galaxies
     |> List.map \{ row, col } ->
         rowExpansion = emptyRows |> numMissingSmallerThan row
         colExpansion = emptyColumns |> numMissingSmallerThan col
-        { row: row + rowExpansion, col: col + colExpansion }
+        { row: row + factor * rowExpansion, col: col + factor * colExpansion }
     |> Ok
 
 allPairs = \items ->
@@ -112,8 +118,12 @@ distance = \( first, second ) ->
     colDistance = distance1d first.col second.col
     rowDistance + colDistance
 
-solve = \galaxies ->
-    expandedGalaxies <- expandUniverse galaxies |> Result.try
+solve = \galaxies, part ->
+    expansion =
+        when part is
+            Part1 -> 2
+            Part2 -> 1000000
+    expandedGalaxies <- galaxies |> expandUniverse expansion |> Result.try
     expandedGalaxies
     |> allPairs
     |> List.map distance
