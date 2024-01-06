@@ -56,12 +56,7 @@ parseLine = \line ->
     |> List.mapTry \x -> x
 
 missingCoords = \coords ->
-    maxCoord <-
-        coords
-        |> List.max
-        |> Result.mapErr \e -> when e is ListWasEmpty -> NoGalaxies
-        |> Result.try
-
+    maxCoord <- coords |> List.max |> Result.try
     allCoords =
         List.range { start: At 0, end: At maxCoord }
         |> Set.fromList
@@ -82,8 +77,14 @@ numMissingSmallerThan = \missing, target ->
             count |> Break
 
 expandUniverse = \galaxies, expansion ->
-    emptyRows <- galaxies |> List.map .row |> missingCoords |> Result.try
-    emptyColumns <- galaxies |> List.map .col |> missingCoords |> Result.try
+    missing = \axis ->
+        galaxies
+        |> List.map axis
+        |> missingCoords
+        |> Result.mapErr \e -> when e is ListWasEmpty -> NoGalaxies
+
+    emptyRows <- missing .row |> Result.try
+    emptyColumns <- missing .col |> Result.try
 
     factor = expansion - 1
     galaxies
@@ -124,8 +125,4 @@ solve = \galaxies, part ->
             Part1 -> 2
             Part2 -> 1000000
     expandedGalaxies <- galaxies |> expandUniverse expansion |> Result.try
-    expandedGalaxies
-    |> allPairs
-    |> List.map distance
-    |> List.sum
-    |> Ok
+    expandedGalaxies |> allPairs |> List.map distance |> List.sum |> Ok
