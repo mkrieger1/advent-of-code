@@ -105,18 +105,9 @@ allPairs = \items ->
 
     makePairs [] items
 
-distance1d = \first, second ->
-    (small, large) =
-        if first <= second then
-            (first, second)
-        else
-            (second, first)
-
-    large - small
-
 distance = \( first, second ) ->
-    rowDistance = distance1d first.row second.row
-    colDistance = distance1d first.col second.col
+    rowDistance = Num.absDiff first.row second.row
+    colDistance = Num.absDiff first.col second.col
     rowDistance + colDistance
 
 solve = \galaxies, part ->
