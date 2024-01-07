@@ -13,8 +13,8 @@ unused = Stdin.line
 
 main =
     run =
-        springs <- parseSprings |> Task.await
-        result <- solve springs |> Task.fromResult |> Task.await
+        records <- parseRecords |> Task.await
+        result <- solve records |> Task.fromResult |> Task.await
         result |> Num.toStr |> Stdout.line
 
     handleErr = \err ->
@@ -27,15 +27,15 @@ main =
     run |> Task.onErr handleErr
 
 Condition : [Operational, Damaged, Unknown]
-Springs : { conditions : List Condition, groups : List Nat }
+Records : { conditions : List Condition, groups : List Nat }
 
-parseSprings : Task (List Springs) _
-parseSprings =
-    walkLinesTry [] \collectedSprings, line ->
-        springs <- parseLine line |> Result.try
-        collectedSprings |> List.append springs |> Ok
+parseRecords : Task (List Records) _
+parseRecords =
+    walkLinesTry [] \collected, line ->
+        records <- parseLine line |> Result.try
+        collected |> List.append records |> Ok
 
-parseLine : Str -> Result Springs _
+parseLine : Str -> Result Records _
 parseLine = \line ->
     when line |> Str.split " " is
         [x, y] ->
@@ -131,8 +131,8 @@ arrangements = \{ conditions, groups } ->
 
         _ -> crash "https://github.com/roc-lang/roc/issues/5530"
 
-solve = \springs ->
-    springs
+solve = \records ->
+    records
     |> List.map arrangements
     |> List.sum
     |> Ok
