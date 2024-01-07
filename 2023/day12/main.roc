@@ -14,8 +14,13 @@ unused = Stdin.line
 main =
     run =
         records <- parseRecords |> Task.await
-        result <- solve records |> Task.fromResult |> Task.await
-        result |> Num.toStr |> Stdout.line
+        result1 <- records |> solve Part1 |> Task.fromResult |> Task.await
+        result2 <- records |> solve Part2 |> Task.fromResult |> Task.await
+        Stdout.line
+            """
+            Part 1: \(Num.toStr result1)
+            Part 2: \(Num.toStr result2)
+            """
 
     handleErr = \err ->
         msg =
@@ -55,6 +60,17 @@ parseConditions = \s ->
 
 parseGroups = \s ->
     s |> Str.split "," |> List.mapTry Str.toNat
+
+unfoldRecords = \records ->
+    conditions =
+        records.conditions
+        |> List.repeat 5 |> List.intersperse [Unknown] |> List.join
+
+    groups =
+        records.groups
+        |> List.repeat 5 |> List.join
+
+    { conditions, groups }
 
 dropPrefix = \list, elem ->
     when list is
@@ -131,8 +147,14 @@ arrangements = \{ conditions, groups } ->
 
         _ -> crash "https://github.com/roc-lang/roc/issues/5530"
 
-solve = \records ->
+solve = \records, part ->
+    unfold =
+        when part is
+            Part1 -> \x -> x
+            Part2 -> unfoldRecords
+
     records
+    |> List.map unfold
     |> List.map arrangements
     |> List.sum
     |> Ok
