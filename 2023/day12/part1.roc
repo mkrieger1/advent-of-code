@@ -26,8 +26,8 @@ main =
 
     run |> Task.onErr handleErr
 
-Condition : [ Operational, Damaged, Unknown ]
-Springs : { conditions : (List Condition), damagedGroups : (List Nat) }
+Condition : [Operational, Damaged, Unknown]
+Springs : { conditions : List Condition, groups : List Nat }
 
 parseSprings : Task (List Springs) _
 parseSprings =
@@ -40,8 +40,8 @@ parseLine = \line ->
     when line |> Str.split " " is
         [x, y] ->
             conditions <- parseConditions x |> Result.try
-            damagedGroups <- parseGroups y |> Result.try
-            Ok { conditions, damagedGroups }
+            groups <- parseGroups y |> Result.try
+            Ok { conditions, groups }
 
         _ -> Err (InvalidInput "Expected a line like \"x y\"")
 
@@ -65,76 +65,32 @@ prefixLength = \list, elem ->
     when list is
         [first, .. as rest] if first == elem ->
             1 + (rest |> prefixLength elem)
+
         _ -> 0
 
-checkNoDamaged :
-    List Condition ->
-    [NoDamaged, SomeDamaged, PossibleDamaged (List Condition)]
-checkNoDamaged = \conditions ->
-    if conditions |> List.any \c -> c == Damaged then
-        SomeDamaged
-    else
-        when conditions |> List.findFirstIndex \c -> c == Unknown is
-            Err NotFound -> NoDamaged
-            Ok i -> conditions |> List.dropFirst i |> PossibleDamaged
+matchFirstDamaged :
+    List Condition, Nat -> [NoMatch, Match (List Condition), ChoiceNeeded]
+matchFirstDamaged = \conditions, expectedLength ->
+    opDropped = conditions |> dropPrefix Operational
+    numDamaged = opDropped |> prefixLength Damaged
+    next = opDropped |> List.get numDamaged
 
-checkDamagedPrefix :
-    (List Condition), Nat ->
-    [NoMatch, Match (List Condition), PossibleMatch (List Condition)]
-checkDamagedPrefix = \conditions, damagedGroup ->
-    numDamaged = conditions |> prefixLength Damaged
-    next = conditions |> List.get numDamaged
+    when (numDamaged |> Num.compare expectedLength, next) is
+        (GT, _) -> NoMatch
 
-    if numDamaged > damagedGroup then
-        NoMatch
-    else if numDamaged == damagedGroup then
-        when next is
-            Ok Unknown -> conditions |> PossibleMatch
-            Ok Operational | Err OutOfBounds ->
-                conditions |> List.dropFirst (numDamaged + 1) |> Match
-            _ -> crash "impossible"
-    else
-        when next is
-            Ok Unknown -> conditions |> PossibleMatch
-            _ -> NoMatch
+        (EQ, Ok Unknown) -> ChoiceNeeded
+        (EQ, Ok Operational)
+        | (EQ, Err OutOfBounds) ->
+            opDropped |> List.dropFirst (numDamaged + 1) |> Match
 
-checkFirstGroup : Springs -> [NoMatch, Match, PossibleMatch Springs]
-checkFirstGroup = \{ conditions, damagedGroups } ->
-    when damagedGroups is
-        [] ->
-            when conditions |> checkNoDamaged is
-                NoDamaged -> Match
-                SomeDamaged -> NoMatch
-                PossibleDamaged remainingConditions ->
-                    PossibleMatch {
-                        conditions: remainingConditions,
-                        damagedGroups
-                    }
-        [first, .. as rest] ->
-            checkResult =
-                conditions
-                |> dropPrefix Operational
-                |> checkDamagedPrefix first
-            when checkResult is
-                NoMatch -> NoMatch
-                Match remainingConditions ->
-                    PossibleMatch {
-                        conditions: remainingConditions,
-                        damagedGroups: damagedGroups |> List.dropFirst 1
-                    }
-                PossibleMatch remainingConditions ->
-                    PossibleMatch {
-                        conditions: remainingConditions,
-                        damagedGroups
-                    }
+        (EQ, Ok Damaged) -> crash "impossible"
+        (EQ, _) -> crash "https://github.com/roc-lang/roc/issues/5530"
 
-checkAllGroups : Springs -> [NoMatch, Match]
-checkAllGroups = \springs ->
-    when checkFirstGroup springs is
-        NoMatch -> NoMatch
-        Match -> Match
-        PossibleMatch remaining -> checkAllGroups remaining
+        (LT, Ok Unknown) -> ChoiceNeeded
+        (LT, _) -> NoMatch
 
+makeChoice :
+    List Condition -> Result (Condition -> List Condition) [NoChoicesLeft]
 makeChoice = \conditions ->
     i <-
         conditions
@@ -144,24 +100,39 @@ makeChoice = \conditions ->
     choose = \condition -> conditions |> List.set i condition
     Ok choose
 
-possibleArrangements = \{ conditions, damagedGroups } ->
-    when makeChoice conditions is
-        Err NoChoicesLeft ->
-            when checkAllGroups { conditions, damagedGroups } is
+arrangements = \{ conditions, groups } ->
+    when (makeChoice conditions, groups) is
+        (_, []) ->
+            if conditions |> List.any \c -> c == Damaged then
+                0
+            else
+                1
+
+        (Err NoChoicesLeft, [first, .. as rest]) ->
+            when conditions |> matchFirstDamaged first is
                 NoMatch -> 0
-                Match -> 1
-        Ok choose ->
+                Match remaining ->
+                    arrangements { conditions: remaining, groups: rest }
+
+                ChoiceNeeded -> crash "impossible"
+
+        (Ok choose, [first, .. as rest]) ->
             [Operational, Damaged]
             |> List.map \condition ->
-                choice = { conditions: choose condition, damagedGroups }
-                when checkFirstGroup choice is
+                choice = choose condition
+                when choice |> matchFirstDamaged first is
                     NoMatch -> 0
-                    Match -> 1
-                    PossibleMatch remaining -> possibleArrangements remaining
+                    Match remaining ->
+                        arrangements { conditions: remaining, groups: rest }
+
+                    ChoiceNeeded ->
+                        arrangements { conditions: choice, groups }
             |> List.sum
+
+        _ -> crash "https://github.com/roc-lang/roc/issues/5530"
 
 solve = \springs ->
     springs
-    |> List.map possibleArrangements
+    |> List.map arrangements
     |> List.sum
     |> Ok
