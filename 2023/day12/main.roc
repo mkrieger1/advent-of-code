@@ -126,36 +126,58 @@ makeChoice = \conditions ->
         |> dropOperational
     Ok choose
 
-arrangements = \{ conditions, groups } ->
-    when (makeChoice conditions, groups) is
-        (_, []) ->
-            if conditions |> List.any \c -> c == Damaged then
-                0
-            else
-                1
+dfs = \{ stack, sum }, visit ->
+    when stack is
+        [] -> { stack, sum }
+        [.. as remaining, arg] ->
+            inc = \value -> { stack: remaining, sum: sum + value }
+            concat = \args -> { stack: remaining |> List.concat args, sum }
+            next =
+                when visit arg is
+                    Leaf value -> inc value
+                    Branch args -> concat args
+            next |> dfs visit
 
-        (Err NoChoicesLeft, [first, .. as rest]) ->
-            when conditions |> matchFirstDamaged first is
-                NoMatch -> 0
-                Match remaining ->
-                    arrangements { conditions: remaining, groups: rest }
+arrangements = \root ->
+    {
+        stack: [{
+            conditions: dropOperational root.conditions,
+            groups: root.groups
+        }],
+        sum: 0
+    }
+    |> dfs \{ conditions, groups } ->
+        when (makeChoice conditions, groups) is
+            (_, []) ->
+                if conditions |> List.any \c -> c == Damaged then
+                    Leaf 0
+                else
+                    Leaf 1
 
-                ChoiceNeeded -> crash "impossible"
-
-        (Ok choose, [first, .. as rest]) ->
-            [Operational, Damaged]
-            |> List.map \condition ->
-                choice = choose condition
-                when choice |> matchFirstDamaged first is
-                    NoMatch -> 0
+            (Err NoChoicesLeft, [first, .. as rest]) ->
+                when conditions |> matchFirstDamaged first is
+                    NoMatch -> Leaf 0
                     Match remaining ->
-                        arrangements { conditions: remaining, groups: rest }
+                        Branch [{ conditions: remaining, groups: rest }]
 
-                    ChoiceNeeded ->
-                        arrangements { conditions: choice, groups }
-            |> List.sum
+                    ChoiceNeeded -> crash "impossible"
 
-        _ -> crash "https://github.com/roc-lang/roc/issues/5530"
+            (Ok choose, [first, .. as rest]) ->
+                [Operational, Damaged]
+                |> List.keepOks \condition ->
+                    choice = choose condition
+                    when choice |> matchFirstDamaged first is
+                        NoMatch -> Err {}
+                        Match remaining ->
+                            Ok { conditions: remaining, groups: rest }
+
+                        ChoiceNeeded ->
+                            Ok { conditions: choice, groups }
+                |> Branch
+
+            _ -> crash "https://github.com/roc-lang/roc/issues/5530"
+
+    |> .sum
 
 solve = \records, part ->
     unfold =
@@ -165,8 +187,6 @@ solve = \records, part ->
 
     records
     |> List.map unfold
-    |> List.map \{ conditions, groups } ->
-        { conditions: dropOperational conditions, groups }
     |> List.map arrangements
     |> List.sum
     |> Ok
