@@ -77,6 +77,9 @@ dropPrefix = \list, elem ->
         [first, .. as rest] if first == elem -> rest |> dropPrefix elem
         _ -> list
 
+dropOperational = \conditions ->
+    conditions |> dropPrefix Operational
+
 prefixLength = \list, elem ->
     when list is
         [first, .. as rest] if first == elem ->
@@ -87,9 +90,10 @@ prefixLength = \list, elem ->
 matchFirstDamaged :
     List Condition, Nat -> [NoMatch, Match (List Condition), ChoiceNeeded]
 matchFirstDamaged = \conditions, expectedLength ->
-    opDropped = conditions |> dropPrefix Operational
-    numDamaged = opDropped |> prefixLength Damaged
-    next = opDropped |> List.get numDamaged
+    expect conditions |> prefixLength Operational == 0
+
+    numDamaged = conditions |> prefixLength Damaged
+    next = conditions |> List.get numDamaged
 
     when (numDamaged |> Num.compare expectedLength, next) is
         (GT, _) -> NoMatch
@@ -97,7 +101,10 @@ matchFirstDamaged = \conditions, expectedLength ->
         (EQ, Ok Unknown) -> ChoiceNeeded
         (EQ, Ok Operational)
         | (EQ, Err OutOfBounds) ->
-            opDropped |> List.dropFirst (numDamaged + 1) |> Match
+            conditions
+            |> List.dropFirst (numDamaged + 1)
+            |> dropOperational
+            |> Match
 
         (EQ, Ok Damaged) -> crash "impossible"
         (EQ, _) -> crash "https://github.com/roc-lang/roc/issues/5530"
@@ -113,7 +120,10 @@ makeChoice = \conditions ->
         |> List.findFirstIndex (\c -> c == Unknown)
         |> Result.mapErr \e -> when e is NotFound -> NoChoicesLeft
         |> Result.try
-    choose = \condition -> conditions |> List.set i condition
+    choose = \condition ->
+        conditions
+        |> List.set i condition
+        |> dropOperational
     Ok choose
 
 arrangements = \{ conditions, groups } ->
@@ -155,6 +165,8 @@ solve = \records, part ->
 
     records
     |> List.map unfold
+    |> List.map \{ conditions, groups } ->
+        { conditions: dropOperational conditions, groups }
     |> List.map arrangements
     |> List.sum
     |> Ok
