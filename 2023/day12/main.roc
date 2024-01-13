@@ -126,58 +126,52 @@ makeChoice = \conditions ->
         |> dropOperational
     Ok choose
 
-dfs = \{ stack, sum }, visit ->
-    when stack is
-        [] -> { stack, sum }
-        [.. as remaining, arg] ->
-            inc = \value -> { stack: remaining, sum: sum + value }
-            concat = \args -> { stack: remaining |> List.concat args, sum }
-            next =
-                when visit arg is
-                    Leaf value -> inc value
-                    Branch args -> concat args
-            next |> dfs visit
+arrangements = \cache, { conditions, groups } ->
+    when (makeChoice conditions, groups) is
+        (_, []) ->
+            if conditions |> List.any \c -> c == Damaged then
+                { cache, value: 0 }
+            else
+                { cache, value: 1 }
 
-arrangements = \root ->
-    {
-        stack: [{
-            conditions: dropOperational root.conditions,
-            groups: root.groups
-        }],
-        sum: 0
-    }
-    |> dfs \{ conditions, groups } ->
-        when (makeChoice conditions, groups) is
-            (_, []) ->
-                if conditions |> List.any \c -> c == Damaged then
-                    Leaf 0
-                else
-                    Leaf 1
+        (Err NoChoicesLeft, [first, .. as rest]) ->
+            when conditions |> matchFirstDamaged first is
+                NoMatch -> { cache, value: 0 }
+                Match remaining ->
+                    cache
+                    |> memo arrangements { conditions: remaining, groups: rest }
 
-            (Err NoChoicesLeft, [first, .. as rest]) ->
-                when conditions |> matchFirstDamaged first is
-                    NoMatch -> Leaf 0
-                    Match remaining ->
-                        Branch [{ conditions: remaining, groups: rest }]
+                ChoiceNeeded -> crash "impossible"
 
-                    ChoiceNeeded -> crash "impossible"
-
-            (Ok choose, [first, .. as rest]) ->
-                [Operational, Damaged]
-                |> List.keepOks \condition ->
-                    choice = choose condition
+        (Ok choose, [first, .. as rest]) ->
+            [Operational, Damaged]
+            |> List.walk { cache, value: 0 } \state, condition ->
+                choice = choose condition
+                result =
                     when choice |> matchFirstDamaged first is
-                        NoMatch -> Err {}
+                        NoMatch -> { cache: state.cache, value: 0 }
                         Match remaining ->
-                            Ok { conditions: remaining, groups: rest }
+                            state.cache
+                            |> memo
+                                arrangements
+                                { conditions: remaining, groups: rest }
 
                         ChoiceNeeded ->
-                            Ok { conditions: choice, groups }
-                |> Branch
+                            state.cache
+                            |> memo
+                                arrangements
+                                { conditions: choice, groups }
 
-            _ -> crash "https://github.com/roc-lang/roc/issues/5530"
+                { result & value: state.value + result.value }
 
-    |> .sum
+        _ -> crash "https://github.com/roc-lang/roc/issues/5530"
+
+memo = \cache, f, arg ->
+    when cache |> Dict.get arg is
+        Ok value -> { cache, value }
+        Err KeyNotFound ->
+            result = f cache arg
+            { result & cache: result.cache |> Dict.insert arg result.value }
 
 solve = \records, part ->
     unfold =
@@ -187,6 +181,9 @@ solve = \records, part ->
 
     records
     |> List.map unfold
-    |> List.map arrangements
+    |> List.map \{ conditions, groups } ->
+        { conditions: dropOperational conditions, groups }
+    |> List.map \record ->
+        memo (Dict.empty {}) arrangements record |> .value
     |> List.sum
     |> Ok
