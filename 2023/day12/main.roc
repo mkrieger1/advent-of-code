@@ -126,36 +126,52 @@ makeChoice = \conditions ->
         |> dropOperational
     Ok choose
 
-arrangements = \{ conditions, groups } ->
+arrangements = \cache, { conditions, groups } ->
     when (makeChoice conditions, groups) is
         (_, []) ->
             if conditions |> List.any \c -> c == Damaged then
-                0
+                { cache, value: 0 }
             else
-                1
+                { cache, value: 1 }
 
         (Err NoChoicesLeft, [first, .. as rest]) ->
             when conditions |> matchFirstDamaged first is
-                NoMatch -> 0
+                NoMatch -> { cache, value: 0 }
                 Match remaining ->
-                    arrangements { conditions: remaining, groups: rest }
+                    cache
+                    |> memo arrangements { conditions: remaining, groups: rest }
 
                 ChoiceNeeded -> crash "impossible"
 
         (Ok choose, [first, .. as rest]) ->
             [Operational, Damaged]
-            |> List.map \condition ->
+            |> List.walk { cache, value: 0 } \state, condition ->
                 choice = choose condition
-                when choice |> matchFirstDamaged first is
-                    NoMatch -> 0
-                    Match remaining ->
-                        arrangements { conditions: remaining, groups: rest }
+                result =
+                    when choice |> matchFirstDamaged first is
+                        NoMatch -> { cache: state.cache, value: 0 }
+                        Match remaining ->
+                            state.cache
+                            |> memo
+                                arrangements
+                                { conditions: remaining, groups: rest }
 
-                    ChoiceNeeded ->
-                        arrangements { conditions: choice, groups }
-            |> List.sum
+                        ChoiceNeeded ->
+                            state.cache
+                            |> memo
+                                arrangements
+                                { conditions: choice, groups }
+
+                { result & value: state.value + result.value }
 
         _ -> crash "https://github.com/roc-lang/roc/issues/5530"
+
+memo = \cache, f, arg ->
+    when cache |> Dict.get arg is
+        Ok value -> { cache, value }
+        Err KeyNotFound ->
+            result = f cache arg
+            { result & cache: result.cache |> Dict.insert arg result.value }
 
 solve = \records, part ->
     unfold =
@@ -167,6 +183,7 @@ solve = \records, part ->
     |> List.map unfold
     |> List.map \{ conditions, groups } ->
         { conditions: dropOperational conditions, groups }
-    |> List.map arrangements
+    |> List.map \record ->
+        memo (Dict.empty {}) arrangements record |> .value
     |> List.sum
     |> Ok
