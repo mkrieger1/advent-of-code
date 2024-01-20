@@ -15,7 +15,7 @@ main =
     run =
         records <- parseRecords |> Task.await
         result1 <- records |> solve Part1 |> Task.fromResult |> Task.await
-        result2 <- records |> solve Part2 |> Task.fromResult |> Task.await
+        result2 = 0 #<- records |> solve Part2 |> Task.fromResult |> Task.await
         Stdout.line
             """
             Part 1: \(Num.toStr result1)
@@ -126,7 +126,17 @@ makeChoice = \conditions ->
         |> dropOperational
     Ok choose
 
+pretty = \conditions ->
+    conditions
+    |> List.map \c ->
+        when c is
+             Operational -> '.'
+             Damaged -> '#'
+             Unknown -> '?'
+    |> Str.fromUtf8
+
 arrangements = \cache, { conditions, groups } ->
+    dbg T (pretty conditions) groups
     when (makeChoice conditions, groups) is
         (_, []) ->
             if conditions |> List.any \c -> c == Damaged then
